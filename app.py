@@ -81,7 +81,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# 타이틀과 QR 이미지 링크, 그리고 타이틀 바로 옆 제작 및 문의 문구 배치
+# 타이틀과 QR 이미지 링크, 그리고 타이틀 바로 옆 제작 및 문의 문구 배치 (타이틀과 동일한 색상 적용)
 title_col_qr, title_col_main = st.columns([0.8, 4.2])
 with title_col_qr:
     st.image("바로가기 QR.png", width=150)
@@ -95,7 +95,7 @@ with title_col_main:
         <div style="display: flex; align-items: baseline; flex-wrap: wrap; gap: 15px; padding-top: 0.5rem;">
             <h1 style="margin: 0; padding: 0; font-size: 2.2rem; display: inline-block;">📊 의료장비 투자집행 계획 실적 대시보드</h1>
             <span style="font-size: 1.15rem; font-weight: bold;">
-                <a href="mailto:dhkoh@inhauh.com" style="color: #000000; text-decoration: none;">제작 및 문의 : 인하대병원 의용공학팀 (dhkoh@inhauh.com)</a>
+                <a href="mailto:dhkoh@inhauh.com" style="color: inherit; text-decoration: none;">제작 및 문의 : 인하대병원 의용공학팀 (dhkoh@inhauh.com)</a>
             </span>
         </div>
         """,
