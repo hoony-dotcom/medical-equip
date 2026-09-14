@@ -5,7 +5,7 @@ import plotly.express as px
 # 1. 웹 페이지 기본 설정
 st.set_page_config(page_title="의료장비 투자집행 대시보드", layout="wide")
 
-# 줄바꿈, 좌우 스크롤, 라디오 버튼 및 '해당 리스트 열기' 버튼 커스텀 CSS 주입 (빨간 배경, 흰색 진한 글씨, 중앙 정렬 등)
+# 줄바꿈, 좌우 스크롤, 라디오 버튼, 체크박스 크기 및 버튼 스타일 커스텀 CSS 주입
 st.markdown("""
 <style>
     /* 데이터프레임 셀 내부 텍스트 자동 줄바꿈 설정 */
@@ -40,6 +40,19 @@ st.markdown("""
     
     .stRadio div[role="radiogroup"] input[type="radio"] {
         border: 2px solid #333333 !important;
+    }
+
+    /* 1.5배 커진 체크박스 스타일 적용 */
+    .stCheckbox label {
+        font-size: 1.3rem !important;
+    }
+    .stCheckbox label p {
+        font-size: 1.3rem !important;
+    }
+    .stCheckbox input[type="checkbox"] {
+        width: 1.5rem !important;
+        height: 1.5rem !important;
+        accent-color: #E74C3C !important;
     }
 
     /* '해당 리스트 열기' 버튼 스타일 (빨간색 배경, 흰색 글씨, 진한 글씨체, 2배 크기) */
@@ -83,18 +96,60 @@ def load_data():
     return df
 
 df = load_data()
-total_original_count = len(df)
 
 # ==========================================
-# 3. 데이터 필터링 레이블 매핑 및 구성
+# 3. 순번 앞 2자리 기준 년도 추출 및 필터링 적용
 # ==========================================
+def extract_year_prefix(val):
+    if pd.isna(val):
+        return None
+    s = str(val).strip()
+    if '.' in s:
+        s = s.split('.')[0]
+    if len(s) >= 2:
+        return s[:2]
+    return None
+
+seq_col_real = next((c for c in df.columns if '순번' in str(c)), None)
+if seq_col_real:
+    df['_년도_prefix'] = df[seq_col_real].apply(extract_year_prefix)
+else:
+    df['_년도_prefix'] = None
+
 st.markdown("---")
 st.subheader("🔍 데이터 필터링")
 
+# 년도 체크박스 UI 구성 (전체 선택 옵션 제거, 개별 년도만 배치)
+available_years = sorted([y for y in df['_년도_prefix'].unique() if y is not None]) if '_년도_prefix' in df.columns else []
+
+if available_years:
+    st.markdown("**📅 1차 필터: 연도 선택 (순번 앞 2자리 기준)**")
+    year_cols = st.columns(len(available_years))
+    
+    selected_years = []
+    for idx, year_val in enumerate(available_years):
+        with year_cols[idx]:
+            # 기본값 True로 설정하여 처음엔 모든 연도가 선택된 상태로 시작
+            is_checked = st.checkbox(f"{year_val}년도 (앞2자리)", value=True, key=f"chk_year_{year_val}")
+            if is_checked:
+                selected_years.append(year_val)
+                
+    # 년도 필터 적용
+    if selected_years:
+        filtered_df_by_year = df[df['_년도_prefix'].isin(selected_years)]
+    else:
+        # 아무것도 체크 안 된 경우 빈 데이터프레임 처리
+        filtered_df_by_year = df.iloc[0:0]
+else:
+    filtered_df_by_year = df
+
+st.markdown("")
+
+# 진행상태 필터 라디오 버튼 구성
 target_label_done = "발주완료 (납품완료 or 납품 대기)"
 
-if '진행상태' in df.columns:
-    raw_statuses = list(df['진행상태'].unique())
+if '진행상태' in filtered_df_by_year.columns:
+    raw_statuses = list(filtered_df_by_year['진행상태'].unique())
     excluded_set = {'완료', '진행중(발주완료)', '진행중', '진행예정'}
     other_statuses = [s for s in raw_statuses if s not in excluded_set]
     display_options = ['전체', target_label_done, '계약 진행중', '진행필요'] + other_statuses
@@ -107,16 +162,18 @@ selected_status = st.radio(
     horizontal=True
 )
 
-if selected_status == '전체' or '진행상태' not in df.columns:
-    filtered_df = df
+if selected_status == '전체' or '진행상태' not in filtered_df_by_year.columns:
+    filtered_df = filtered_df_by_year
 elif selected_status == target_label_done:
-    filtered_df = df[df['진행상태'].isin(['완료', '진행중(발주완료)'])]
+    filtered_df = filtered_df_by_year[filtered_df_by_year['진행상태'].isin(['완료', '진행중(발주완료)'])]
 elif selected_status == '계약 진행중':
-    filtered_df = df[df['진행상태'] == '진행중']
+    filtered_df = filtered_df_by_year[filtered_df_by_year['진행상태'] == '진행중']
 elif selected_status == '진행필요':
-    filtered_df = df[df['진행상태'] == '진행예정']
+    filtered_df = filtered_df_by_year[filtered_df_by_year['진행상태'] == '진행예정']
 else:
-    filtered_df = df[df['진행상태'] == selected_status]
+    filtered_df = filtered_df_by_year[filtered_df_by_year['진행상태'] == selected_status]
+
+total_original_count = len(filtered_df_by_year)
 
 # ==========================================
 # 4. 세부 데이터 팝업(새 창) 정의 함수
@@ -127,18 +184,17 @@ def show_detail_dialog(target_df, status_name):
     if len(target_df) > 0:
         inv_col_real = next((c for c in target_df.columns if '투자 계획' in str(c)), '투자 계획\n(계약체결일)')
         preferred_cols = ['순번', '진행상태', '신청부서', '의공담당', '의공담당자', '장비명', '승인금액', '계약금액', inv_col_real, '비고', '비고2']
-        display_columns = [c for c in preferred_cols if c in target_df.columns]
+        display_columns = [c for c in preferred_cols if c in target_df.columns and c != '_년도_prefix']
         
-        if '순번' not in display_columns:
-            alt_seq = next((c for c in target_df.columns if '순번' in str(c)), None)
-            if alt_seq:
-                display_columns.insert(0, alt_seq)
+        if seq_col_name := next((c for c in target_df.columns if '순번' in str(c)), None):
+            if seq_col_name not in display_columns:
+                display_columns.insert(0, seq_col_name)
 
         dlg_styled = target_df[display_columns].copy()
         
-        seq_col_name = next((c for c in dlg_styled.columns if '순번' in str(c)), None)
-        if seq_col_name:
-            dlg_styled[seq_col_name] = dlg_styled[seq_col_name].astype(str).str.replace('nan', '-')
+        seq_c = next((c for c in dlg_styled.columns if '순번' in str(c)), None)
+        if seq_c:
+            dlg_styled[seq_c] = dlg_styled[seq_c].astype(str).str.replace('nan', '-')
 
         if '승인금액' in dlg_styled.columns:
             dlg_styled['승인금액'] = dlg_styled['승인금액'].apply(lambda x: "임차" if x == 0 else f"{x:,.0f}")
@@ -181,7 +237,6 @@ col3.metric("📊 승인가 대비 계약가", f"{execution_rate_amount:.1f}%")
 col4.metric("📝 건수 (조회 / 전체)", f"{filtered_count} 건 / {total_original_count} 건")
 col5.metric("📈 집행비율(건수)", rate_count_display)
 
-# 화면 정중앙 배치를 위한 3분할 컬럼 사용 (가운데 컬럼에 버튼 위치)
 st.markdown("")
 _, center_col, _ = st.columns([1.5, 3, 1.5])
 with center_col:
@@ -191,7 +246,7 @@ with center_col:
 st.markdown("---")
 
 # ==========================================
-# 6. 차트 시각화 영역
+# 6. 차트 시각화 영역 (필터링된 데이터 반영)
 # ==========================================
 custom_order = ['완료', '진행중(발주완료)', '진행중', '진행예정', '검토필요', '보류', ' 취소', '취소']
 color_map = {
@@ -215,8 +270,8 @@ chart_col1, chart_col2 = st.columns(2)
 
 with chart_col1:
     st.subheader("📌 투자집행 진행상태 (건수 기준)")
-    if len(df) > 0 and '진행상태' in df.columns:
-        status_counts = df['진행상태'].value_counts().reset_index()
+    if len(filtered_df_by_year) > 0 and '진행상태' in filtered_df_by_year.columns:
+        status_counts = filtered_df_by_year['진행상태'].value_counts().reset_index()
         status_counts.columns = ['진행상태', '건수']
         status_counts = sort_status_df(status_counts)
         
@@ -237,8 +292,8 @@ with chart_col1:
 
 with chart_col2:
     st.subheader("💰 투자집행 진행상태 (승인금액 기준)")
-    if len(df) > 0 and '진행상태' in df.columns and '승인금액' in df.columns:
-        status_amounts = df.groupby('진행상태')['승인금액'].sum().reset_index()
+    if len(filtered_df_by_year) > 0 and '진행상태' in filtered_df_by_year.columns and '승인금액' in filtered_df_by_year.columns:
+        status_amounts = filtered_df_by_year.groupby('진행상태')['승인금액'].sum().reset_index()
         status_amounts.columns = ['진행상태', '승인금액합계']
         status_amounts = sort_status_df(status_amounts)
         status_amounts['금액_표시'] = status_amounts['승인금액합계'].apply(lambda x: f"{x:,.0f} 천원")
@@ -264,8 +319,8 @@ chart_col3, _ = st.columns(2)
 
 with chart_col3:
     st.subheader("🏢 신청부서별 승인금액 Top 10")
-    if len(df) > 0 and '신청부서' in df.columns and '승인금액' in df.columns:
-        dept_amounts = df.groupby('신청부서')['승인금액'].sum().reset_index()
+    if len(filtered_df_by_year) > 0 and '신청부서' in filtered_df_by_year.columns and '승인금액' in filtered_df_by_year.columns:
+        dept_amounts = filtered_df_by_year.groupby('신청부서')['승인금액'].sum().reset_index()
         dept_amounts = dept_amounts.sort_values('승인금액', ascending=False).head(10)
         dept_amounts['승인금액_표시'] = dept_amounts['승인금액'].apply(lambda x: f"{x:,.0f} 천원")
         
@@ -292,18 +347,17 @@ st.subheader(f"📋 세부 데이터 ({selected_status})")
 if len(filtered_df) > 0:
     inv_col_real = next((c for c in filtered_df.columns if '투자 계획' in str(c)), '투자 계획\n(계약체결일)')
     preferred_cols = ['순번', '진행상태', '신청부서', '의공담당', '의공담당자', '장비명', '승인금액', '계약금액', inv_col_real, '비고', '비고2']
-    display_columns = [c for c in preferred_cols if c in filtered_df.columns]
+    display_columns = [c for c in preferred_cols if c in filtered_df.columns and c != '_년도_prefix']
     
-    if '순번' not in display_columns:
-        alt_seq = next((c for c in filtered_df.columns if '순번' in str(c)), None)
-        if alt_seq:
-            display_columns.insert(0, alt_seq)
+    if seq_col_name := next((c for c in filtered_df.columns if '순번' in str(c)), None):
+        if seq_col_name not in display_columns:
+            display_columns.insert(0, seq_col_name)
 
     df_styled = filtered_df[display_columns].copy()
     
-    seq_col_name = next((c for c in df_styled.columns if '순번' in str(c)), None)
-    if seq_col_name:
-        df_styled[seq_col_name] = df_styled[seq_col_name].astype(str).str.replace('nan', '-')
+    seq_c = next((c for c in df_styled.columns if '순번' in str(c)), None)
+    if seq_c:
+        df_styled[seq_c] = df_styled[seq_c].astype(str).str.replace('nan', '-')
 
     if '승인금액' in df_styled.columns:
         df_styled['승인금액'] = df_styled['승인금액'].apply(lambda x: "임차" if x == 0 else f"{x:,.0f}")
