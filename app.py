@@ -91,7 +91,7 @@ with title_col2:
         unsafe_allow_html=True
     )
 
-st.markdown("**기준일:** 2026. 09. 15. | **기준:** 2025, 2026학년도 (단위: 천원) | 엑셀 파일이 수정되면 새로고침 시 자동 반영됩니다.")
+st.markdown("**기준일:** 2026. 09. 15. (단위: 천원) | 2025, 2026학년도 | 엑셀 파일이 수정되면 새로고침 시 자동 반영됩니다.")
 
 # 2. 엑셀 데이터 불러오기 및 안전한 전처리 (승인금액/계약금액 천원 단위 변환 적용)
 @st.cache_data(ttl=60)
@@ -140,13 +140,13 @@ st.subheader("🔍 데이터 필터링")
 available_years = sorted([y for y in df['_년도_prefix'].unique() if y is not None]) if '_년도_prefix' in df.columns else []
 
 if available_years:
-    st.markdown("**📅 1차 필터: 연도 선택 (순번 앞 2자리 기준)**")
+    st.markdown("**📅 1차 필터: 학년도 선택**")
     year_cols = st.columns(len(available_years))
     
     selected_years = []
     for idx, year_val in enumerate(available_years):
         with year_cols[idx]:
-            is_checked = st.checkbox(f"{year_val}년도 (앞2자리)", value=True, key=f"chk_year_{year_val}")
+            is_checked = st.checkbox(f"{year_val}학년도", value=True, key=f"chk_year_{year_val}")
             if is_checked:
                 selected_years.append(year_val)
                 
