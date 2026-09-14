@@ -5,7 +5,7 @@ import plotly.express as px
 # 1. 웹 페이지 기본 설정
 st.set_page_config(page_title="의료장비 투자집행 대시보드", layout="wide")
 
-# 줄바꿈, 좌우 스크롤, 라디오 버튼, 체크박스 크기 및 버튼 스타일 커스텀 CSS 주입
+# 줄바꿈, 좌우 스크롤, 라디오 버튼, 체크박스 크기, 요약 지표 글자 크기 축소 및 버튼 스타일 커스텀 CSS 주입
 st.markdown("""
 <style>
     /* 데이터프레임 셀 내부 텍스트 자동 줄바꿈 설정 */
@@ -55,6 +55,14 @@ st.markdown("""
         accent-color: #E74C3C !important;
     }
 
+    /* 요약 지표(metric) 글자 크기 30% 축소 */
+    [data-testid="stMetricLabel"] {
+        font-size: 0.9rem !important;
+    }
+    [data-testid="stMetricValue"] {
+        font-size: 1.5rem !important;
+    }
+
     /* '해당 리스트 열기' 버튼 스타일 (빨간색 배경, 흰색 글씨, 진한 글씨체, 2배 크기) */
     div.stButton > button {
         background-color: #E74C3C !important;
@@ -73,8 +81,17 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-st.title("📊 의료장비 투자집행 계획 실적 대시보드")
-st.markdown("**기준:** 2025, 2026학년도 (단위: 천원) | 엑셀 파일이 수정되면 새로고침 시 자동 반영됩니다.")
+# 타이틀 및 우측 제작자 메일 링크 배치
+title_col1, title_col2 = st.columns([3.5, 1.5])
+with title_col1:
+    st.title("📊 의료장비 투자집행 계획 실적 대시보드")
+with title_col2:
+    st.markdown(
+        "<div style='text-align: right; padding-top: 1.8rem;'><a href='mailto:dhkoh@inhauh.com' style='color: #2C3E50; text-decoration: none; font-size: 0.95rem; font-weight: bold;'>제작 : 인하대병원 의용공학팀 (dhkoh@inhauh.com)</a></div>",
+        unsafe_allow_html=True
+    )
+
+st.markdown("**기준일:** 2026. 09. 15. | **기준:** 2025, 2026학년도 (단위: 천원) | 엑셀 파일이 수정되면 새로고침 시 자동 반영됩니다.")
 
 # 2. 엑셀 데이터 불러오기 및 안전한 전처리 (승인금액/계약금액 천원 단위 변환 적용)
 @st.cache_data(ttl=60)
@@ -129,7 +146,6 @@ if available_years:
     selected_years = []
     for idx, year_val in enumerate(available_years):
         with year_cols[idx]:
-            # 기본값 True로 설정하여 처음엔 모든 연도가 선택된 상태로 시작
             is_checked = st.checkbox(f"{year_val}년도 (앞2자리)", value=True, key=f"chk_year_{year_val}")
             if is_checked:
                 selected_years.append(year_val)
@@ -138,7 +154,6 @@ if available_years:
     if selected_years:
         filtered_df_by_year = df[df['_년도_prefix'].isin(selected_years)]
     else:
-        # 아무것도 체크 안 된 경우 빈 데이터프레임 처리
         filtered_df_by_year = df.iloc[0:0]
 else:
     filtered_df_by_year = df
@@ -213,7 +228,7 @@ def show_detail_dialog(target_df, status_name):
         st.warning("선택하신 조건에 해당하는 데이터가 없습니다.")
 
 # ==========================================
-# 5. 핵심 요약 지표 및 화면 정중앙 '해당 리스트 열기' 버튼 배치
+# 5. 핵심 요약 지표 (좌우폭 축소) 및 화면 정중앙 '해당 리스트 열기' 버튼 배치
 # ==========================================
 st.markdown("---")
 st.subheader(f"📈 요약 지표 ({selected_status})")
@@ -230,12 +245,14 @@ else:
     execution_rate_count = (filtered_count / total_original_count * 100) if total_original_count > 0 else 0
     rate_count_display = f"{execution_rate_count:.1f}%"
 
-col1, col2, col3, col4, col5 = st.columns(5)
-col1.metric("💰 승인금액 합계", f"{total_approved:,.0f} 천원")
-col2.metric("💳 계약금액 합계", f"{total_contract:,.0f} 천원")
-col3.metric("📊 승인가 대비 계약가", f"{execution_rate_amount:.1f}%")
-col4.metric("📝 건수 (조회 / 전체)", f"{filtered_count} 건 / {total_original_count} 건")
-col5.metric("📈 집행비율(건수)", rate_count_display)
+_, metric_box_col, _ = st.columns([0.5, 9, 0.5])
+with metric_box_col:
+    m1, m2, m3, m4, m5 = st.columns(5)
+    m1.metric("💰 승인금액 합계", f"{total_approved:,.0f} 천원")
+    m2.metric("💳 계약금액 합계", f"{total_contract:,.0f} 천원")
+    m3.metric("📊 승인가 대비 계약가", f"{execution_rate_amount:.1f}%")
+    m4.metric("📝 건수 (조회 / 전체)", f"{filtered_count} 건 / {total_original_count} 건")
+    m5.metric("📈 집행비율(건수)", rate_count_display)
 
 st.markdown("")
 _, center_col, _ = st.columns([1.5, 3, 1.5])
