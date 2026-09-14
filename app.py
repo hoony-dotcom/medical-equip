@@ -81,19 +81,24 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# 타이틀, QR 이미지 및 링크, 우측 제작자 메일 링크 배치 (제작 폰트 20% 확대 및 검은색 적용)
-title_col_qr, title_col1, title_col2 = st.columns([0.8, 2.8, 1.4])
+# 타이틀과 QR 이미지 링크, 그리고 타이틀 바로 옆 제작 및 문의 문구 배치
+title_col_qr, title_col_main = st.columns([0.8, 4.2])
 with title_col_qr:
     st.image("바로가기 QR.png", width=150)
     st.markdown(
         "<div style='text-align: center; margin-top: -0.5rem;'><a href='https://buly.kr/DEbvdwF' target='_blank' style='color: #2980B9; text-decoration: none; font-size: 0.8rem; font-weight: bold;'>🔗 바로가기 링크</a></div>",
         unsafe_allow_html=True
     )
-with title_col1:
-    st.title("📊 의료장비 투자집행 계획 실적 대시보드")
-with title_col2:
+with title_col_main:
     st.markdown(
-        "<div style='text-align: right; padding-top: 1.8rem;'><a href='mailto:dhkoh@inhauh.com' style='color: #000000; text-decoration: none; font-size: 1.15rem; font-weight: bold;'>&nbsp;&nbsp;&nbsp;제작 : 인하대병원 의용공학팀 (dhkoh@inhauh.com)</a></div>",
+        """
+        <div style="display: flex; align-items: baseline; flex-wrap: wrap; gap: 15px; padding-top: 0.5rem;">
+            <h1 style="margin: 0; padding: 0; font-size: 2.2rem; display: inline-block;">📊 의료장비 투자집행 계획 실적 대시보드</h1>
+            <span style="font-size: 1.15rem; font-weight: bold;">
+                <a href="mailto:dhkoh@inhauh.com" style="color: #000000; text-decoration: none;">제작 및 문의 : 인하대병원 의용공학팀 (dhkoh@inhauh.com)</a>
+            </span>
+        </div>
+        """,
         unsafe_allow_html=True
     )
 
@@ -234,7 +239,7 @@ def show_detail_dialog(target_df, status_name):
         st.warning("선택하신 조건에 해당하는 데이터가 없습니다.")
 
 # ==========================================
-# 5. 핵심 요약 지표 (좌우폭 축소) 및 화면 정중앙 '해당 리스트 열기' 버튼 배치
+# 5. 핵심 요약 지표 및 화면 정중앙 '해당 리스트 열기' 버튼 배치
 # ==========================================
 st.markdown("---")
 st.subheader(f"📈 요약 지표 ({selected_status})")
@@ -269,7 +274,7 @@ with center_col:
 st.markdown("---")
 
 # ==========================================
-# 6. 차트 시각화 영역 (필터링된 데이터 반영 및 그래프 글자 크기 20% 추가 확대)
+# 6. 차트 시각화 영역 (필터링된 데이터 반영 및 그래프 글자 크기 17 적용)
 # ==========================================
 custom_order = ['완료', '진행중(발주완료)', '진행중', '진행예정', '검토필요', '보류', ' 취소', '취소']
 color_map = {
@@ -307,7 +312,7 @@ with chart_col1:
             yaxis={'categoryorder': 'array', 'categoryarray': status_counts['진행상태'][::-1]},
             xaxis={'range': [0, max_val * 1.25]},
             showlegend=False,
-            font=dict(size=17)  # 그래프 전체 글자 크기 추가 확대 (14 -> 17)
+            font=dict(size=17)
         )
         fig_status_count.update_traces(textposition='outside', textfont_size=17)
         st.plotly_chart(fig_status_count, use_container_width=True, config={'staticPlot': True})
@@ -332,7 +337,7 @@ with chart_col2:
             yaxis={'categoryorder': 'array', 'categoryarray': status_amounts['진행상태'][::-1]},
             xaxis={'range': [0, max_amt * 1.3]},
             showlegend=False,
-            font=dict(size=17)  # 그래프 전체 글자 크기 추가 확대 (14 -> 17)
+            font=dict(size=17)
         )
         fig_status_amount.update_traces(textposition='outside', textfont_size=17)
         st.plotly_chart(fig_status_amount, use_container_width=True, config={'staticPlot': True})
@@ -357,7 +362,7 @@ with chart_col3:
         fig_dept.update_layout(
             yaxis={'categoryorder': 'total ascending'},
             xaxis={'range': [0, max_dept * 1.3]},
-            font=dict(size=17)  # 그래프 전체 글자 크기 추가 확대 (14 -> 17)
+            font=dict(size=17)
         )
         fig_dept.update_traces(textposition='outside', textfont_size=17)
         st.plotly_chart(fig_dept, use_container_width=True, config={'staticPlot': True})
