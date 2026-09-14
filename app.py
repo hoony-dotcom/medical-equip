@@ -81,13 +81,19 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# 타이틀 및 우측 제작자 메일 링크 배치
-title_col1, title_col2 = st.columns([3.5, 1.5])
+# 타이틀, QR 이미지 및 링크, 우측 제작자 메일 링크 배치 (제작 폰트 20% 확대 및 검은색 적용)
+title_col_qr, title_col1, title_col2 = st.columns([0.8, 2.8, 1.4])
+with title_col_qr:
+    st.image("바로가기 QR.png", width=150)
+    st.markdown(
+        "<div style='text-align: center; margin-top: -0.5rem;'><a href='https://buly.kr/DEbvdwF' target='_blank' style='color: #2980B9; text-decoration: none; font-size: 0.8rem; font-weight: bold;'>🔗 바로가기 링크</a></div>",
+        unsafe_allow_html=True
+    )
 with title_col1:
     st.title("📊 의료장비 투자집행 계획 실적 대시보드")
 with title_col2:
     st.markdown(
-        "<div style='text-align: right; padding-top: 1.8rem;'><a href='mailto:dhkoh@inhauh.com' style='color: #2C3E50; text-decoration: none; font-size: 0.95rem; font-weight: bold;'>제작 : 인하대병원 의용공학팀 (dhkoh@inhauh.com)</a></div>",
+        "<div style='text-align: right; padding-top: 1.8rem;'><a href='mailto:dhkoh@inhauh.com' style='color: #000000; text-decoration: none; font-size: 1.15rem; font-weight: bold;'>&nbsp;&nbsp;&nbsp;제작 : 인하대병원 의용공학팀 (dhkoh@inhauh.com)</a></div>",
         unsafe_allow_html=True
     )
 
@@ -263,7 +269,7 @@ with center_col:
 st.markdown("---")
 
 # ==========================================
-# 6. 차트 시각화 영역 (필터링된 데이터 반영)
+# 6. 차트 시각화 영역 (필터링된 데이터 반영 및 그래프 글자 크기 20% 추가 확대)
 # ==========================================
 custom_order = ['완료', '진행중(발주완료)', '진행중', '진행예정', '검토필요', '보류', ' 취소', '취소']
 color_map = {
@@ -300,9 +306,10 @@ with chart_col1:
         fig_status_count.update_layout(
             yaxis={'categoryorder': 'array', 'categoryarray': status_counts['진행상태'][::-1]},
             xaxis={'range': [0, max_val * 1.25]},
-            showlegend=False
+            showlegend=False,
+            font=dict(size=17)  # 그래프 전체 글자 크기 추가 확대 (14 -> 17)
         )
-        fig_status_count.update_traces(textposition='outside')
+        fig_status_count.update_traces(textposition='outside', textfont_size=17)
         st.plotly_chart(fig_status_count, use_container_width=True, config={'staticPlot': True})
     else:
         st.info("데이터가 없습니다.")
@@ -324,9 +331,10 @@ with chart_col2:
         fig_status_amount.update_layout(
             yaxis={'categoryorder': 'array', 'categoryarray': status_amounts['진행상태'][::-1]},
             xaxis={'range': [0, max_amt * 1.3]},
-            showlegend=False
+            showlegend=False,
+            font=dict(size=17)  # 그래프 전체 글자 크기 추가 확대 (14 -> 17)
         )
-        fig_status_amount.update_traces(textposition='outside')
+        fig_status_amount.update_traces(textposition='outside', textfont_size=17)
         st.plotly_chart(fig_status_amount, use_container_width=True, config={'staticPlot': True})
     else:
         st.info("데이터가 없습니다.")
@@ -348,9 +356,10 @@ with chart_col3:
         max_dept = dept_amounts['승인금액'].max() if len(dept_amounts) > 0 else 10
         fig_dept.update_layout(
             yaxis={'categoryorder': 'total ascending'},
-            xaxis={'range': [0, max_dept * 1.3]}
+            xaxis={'range': [0, max_dept * 1.3]},
+            font=dict(size=17)  # 그래프 전체 글자 크기 추가 확대 (14 -> 17)
         )
-        fig_dept.update_traces(textposition='outside')
+        fig_dept.update_traces(textposition='outside', textfont_size=17)
         st.plotly_chart(fig_dept, use_container_width=True, config={'staticPlot': True})
     else:
         st.info("데이터가 없습니다.")
