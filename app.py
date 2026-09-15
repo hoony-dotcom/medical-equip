@@ -1,3 +1,4 @@
+# python -m streamlit run app.py
 import streamlit as st
 import pandas as pd
 import plotly.express as px
@@ -105,7 +106,11 @@ with title_col_main:
         unsafe_allow_html=True
     )
 
-st.markdown("**기준일:** 2026. 09. 15. (단위: 천원) | 2025, 2026학년도 | 엑셀 파일이 수정되면 새로고침 시 자동 반영됩니다.")
+st.markdown(
+    "**기준일:** 2026. 09. 15. (단위: 천원) | 2025, 2026학년도 | 엑셀 파일이 수정되면 새로고침 시 자동 반영됩니다.<br><br>"
+    "계약금액 \"Hidden\"으로 표시합니다. (대외비)",
+    unsafe_allow_html=True
+)
 
 # 2. 엑셀 데이터 불러오기 및 안전한 전처리 (승인금액/계약금액 천원 단위 변환 적용)
 @st.cache_data(ttl=60)
@@ -228,7 +233,7 @@ def show_detail_dialog(target_df, status_name):
         if '승인금액' in dlg_styled.columns:
             dlg_styled['승인금액'] = dlg_styled['승인금액'].apply(lambda x: "임차" if x == 0 else f"{x:,.0f}")
         if '계약금액' in dlg_styled.columns:
-            dlg_styled['계약금액'] = dlg_styled['계약금액'].apply(lambda x: f"{x:,.0f}" if pd.notnull(x) else "0")
+            dlg_styled['계약금액'] = dlg_styled['계약금액'].apply(lambda x: "hidden" if pd.notnull(x) and x >= 1 else (f"{x:,.0f}" if pd.notnull(x) else "0"))
         if inv_col_real in dlg_styled.columns:
             dlg_styled[inv_col_real] = dlg_styled[inv_col_real].astype(str).str.replace(' 00:00:00', '').replace('NaT', '-')
 
@@ -397,7 +402,7 @@ if len(filtered_df) > 0:
         df_styled['승인금액'] = df_styled['승인금액'].apply(lambda x: "임차" if x == 0 else f"{x:,.0f}")
         
     if '계약금액' in df_styled.columns:
-        df_styled['계약금액'] = df_styled['계약금액'].apply(lambda x: f"{x:,.0f}" if pd.notnull(x) else "0")
+        df_styled['계약금액'] = df_styled['계약금액'].apply(lambda x: "hidden" if pd.notnull(x) and x >= 1 else (f"{x:,.0f}" if pd.notnull(x) else "0"))
         
     if inv_col_real in df_styled.columns:
         df_styled[inv_col_real] = df_styled[inv_col_real].astype(str).str.replace(' 00:00:00', '').replace('NaT', '-')
