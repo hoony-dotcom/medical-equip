@@ -217,7 +217,7 @@ def show_detail_dialog(target_df, status_name):
     st.markdown(f"**조회 상태:** `{status_name}` (총 {len(target_df)}건)")
     if len(target_df) > 0:
         inv_col_real = next((c for c in target_df.columns if '투자 계획' in str(c)), '투자 계획\n(계약체결일)')
-        preferred_cols = ['순번', '진행상태', '신청부서', '의공담당', '의공담당자', '장비명', '승인금액', '계약금액', inv_col_real, '비고', '비고2']
+        preferred_cols = ['순번', '투자구분', '진행상태', '신청부서', '의공담당', '의공담당자', '장비명', '승인금액', '계약금액', inv_col_real, '비고', '비고2']
         display_columns = [c for c in preferred_cols if c in target_df.columns and c != '_년도_prefix']
         
         if seq_col_name := next((c for c in target_df.columns if '순번' in str(c)), None):
@@ -237,11 +237,19 @@ def show_detail_dialog(target_df, status_name):
         if inv_col_real in dlg_styled.columns:
             dlg_styled[inv_col_real] = dlg_styled[inv_col_real].astype(str).str.replace(' 00:00:00', '').replace('NaT', '-')
 
-        for text_col in ['의공담당', '의공담당자', '비고', '비고2']:
+        for text_col in ['투자구분', '의공담당', '의공담당자', '비고', '비고2']:
             if text_col in dlg_styled.columns:
                 dlg_styled[text_col] = dlg_styled[text_col].apply(lambda x: "" if pd.isnull(x) or str(x).strip().lower() in ['nan', 'none', 'nat'] else str(x))
 
-        column_config = {col: st.column_config.TextColumn(col, width="auto") for col in dlg_styled.columns}
+        column_config = {}
+        for idx, col in enumerate(dlg_styled.columns, 1):
+            if idx in [1, 2, 3, 4, 5, 9]:
+                column_config[col] = st.column_config.TextColumn(col, width="auto", alignment="center")
+            elif idx in [7, 8]:
+                column_config[col] = st.column_config.TextColumn(col, width="auto", alignment="right")
+            else:
+                column_config[col] = st.column_config.TextColumn(col, width="auto")
+
         st.dataframe(dlg_styled, use_container_width=True, hide_index=True, column_config=column_config)
     else:
         st.warning("선택하신 조건에 해당하는 데이터가 없습니다.")
@@ -385,7 +393,7 @@ st.subheader(f"📋 세부 데이터 ({selected_status})")
 
 if len(filtered_df) > 0:
     inv_col_real = next((c for c in filtered_df.columns if '투자 계획' in str(c)), '투자 계획\n(계약체결일)')
-    preferred_cols = ['순번', '진행상태', '신청부서', '의공담당', '의공담당자', '장비명', '승인금액', '계약금액', inv_col_real, '비고', '비고2']
+    preferred_cols = ['순번', '투자구분', '진행상태', '신청부서', '의공담당', '의공담당자', '장비명', '승인금액', '계약금액', inv_col_real, '비고', '비고2']
     display_columns = [c for c in preferred_cols if c in filtered_df.columns and c != '_년도_prefix']
     
     if seq_col_name := next((c for c in filtered_df.columns if '순번' in str(c)), None):
@@ -407,16 +415,18 @@ if len(filtered_df) > 0:
     if inv_col_real in df_styled.columns:
         df_styled[inv_col_real] = df_styled[inv_col_real].astype(str).str.replace(' 00:00:00', '').replace('NaT', '-')
 
-    for text_col in ['의공담당', '의공담당자', '비고', '비고2']:
+    for text_col in ['투자구분', '의공담당', '의공담당자', '비고', '비고2']:
         if text_col in df_styled.columns:
             df_styled[text_col] = df_styled[text_col].apply(lambda x: "" if pd.isnull(x) or str(x).strip().lower() in ['nan', 'none', 'nat'] else str(x))
 
-    column_config = {
-        col: st.column_config.TextColumn(
-            col,
-            width="auto"
-        ) for col in df_styled.columns
-    }
+    column_config = {}
+    for idx, col in enumerate(df_styled.columns, 1):
+        if idx in [1, 2, 3, 4, 5, 9]:
+            column_config[col] = st.column_config.TextColumn(col, width="auto", alignment="center")
+        elif idx in [7, 8]:
+            column_config[col] = st.column_config.TextColumn(col, width="auto", alignment="right")
+        else:
+            column_config[col] = st.column_config.TextColumn(col, width="auto")
 
     st.dataframe(
         df_styled,
