@@ -86,7 +86,10 @@ title_col_qr, title_col_main = st.columns([0.8, 4.2])
 with title_col_qr:
     st.image("바로가기 QR.png", width=150)
     st.markdown(
-        "<div style='text-align: center; margin-top: -0.5rem;'><a href='https://buly.kr/DEbvdwF' target='_blank' style='color: #2980B9; text-decoration: none; font-size: 0.8rem; font-weight: bold;'>🔗 바로가기 링크</a></div>",
+        "<div style='text-align: center; margin-top: -0.5rem;'>"
+        "<a href='https://buly.kr/DEbvdwF' target='_blank' style='color: #2980B9; text-decoration: none; font-size: 1.6rem; font-weight: bold;'>🔗 바로가기 링크</a>"
+        "<br><span style='color: #555555; font-size: 1.5rem; font-weight: bold;'>https://buly.kr/DEbvdwF</span>"
+        "</div>",
         unsafe_allow_html=True
     )
 with title_col_main:
