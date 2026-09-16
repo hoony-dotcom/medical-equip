@@ -124,7 +124,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# 메인 타이틀 배치 (제작 및 문의 정보 제거됨)
+# 메인 타이틀 배치
 st.markdown(
     """
     <div style="padding-top: 0.2rem;">
@@ -180,13 +180,19 @@ if seq_col_real:
 else:
     df['_년도_prefix'] = None
 
-# 사이드바 상단에 제작 및 문의 정보 배치
+# 사이드바 상단에 제작 및 문의 및 관련 앱 링크 배치
 st.sidebar.markdown(
     """
-    <div style="background-color: #F8F9FA; padding: 10px 12px; border-radius: 6px; border: 1px solid #E9ECEF; margin-bottom: 15px;">
+    <div style="background-color: #F8F9FA; padding: 12px; border-radius: 6px; border: 1px solid #E9ECEF; margin-bottom: 15px;">
         <span style="font-size: 0.95rem; font-weight: bold; color: #2C3E50;">🛠️ 제작 및 문의</span><br>
         <span style="font-size: 0.9rem;">인하대병원 의용공학팀</span><br>
         <a href="mailto:dhkoh@inhauh.com" style="font-size: 0.9rem; color: #2980B9; text-decoration: none;">dhkoh@inhauh.com</a>
+        <hr style="margin: 8px 0; border: none; border-top: 1px solid #DDD;">
+        <span style="font-size: 0.95rem; font-weight: bold; color: #2C3E50;">🔗 의용공학팀 개발 앱</span><br>
+        <div style="margin-top: 5px; font-size: 0.88rem; line-height: 1.4;">
+            1. <a href="https://buly.kr/DEbvdwF" target="_blank" style="color: #2980B9; text-decoration: none;">의료장비 투자집행 계획 실적</a><br>
+            2. <a href="https://buly.kr/7mERs3u" target="_blank" style="color: #2980B9; text-decoration: none;">의료장비 현황 바로가기</a>
+        </div>
     </div>
     """,
     unsafe_allow_html=True
