@@ -22,14 +22,14 @@ st.markdown("""
         overflow-x: auto !important;
     }
 
-    /* 데이터 필터링(라디오 버튼) 폰트 크기 조절 (약 1.4rem) */
+    /* 데이터 필터링(라디오 버튼) 폰트 크기 조절 (약 1.3rem) */
     div[row-widget="stRadio"] label, 
     .stRadio div[role="radiogroup"] label {
-        font-size: 1.4rem !important; 
+        font-size: 1.3rem !important; 
     }
     
     .stRadio label p {
-        font-size: 1.4rem !important;
+        font-size: 1.3rem !important;
     }
 
     /* 라디오 버튼(동그라미) 테두리를 진하게 및 두껍게 강조 */
@@ -45,14 +45,14 @@ st.markdown("""
 
     /* 1.5배 커진 체크박스 스타일 적용 */
     .stCheckbox label {
-        font-size: 1.3rem !important;
+        font-size: 1.2rem !important;
     }
     .stCheckbox label p {
-        font-size: 1.3rem !important;
+        font-size: 1.2rem !important;
     }
     .stCheckbox input[type="checkbox"] {
-        width: 1.5rem !important;
-        height: 1.5rem !important;
+        width: 1.4rem !important;
+        height: 1.4rem !important;
         accent-color: #E74C3C !important;
     }
 
@@ -138,7 +138,7 @@ def load_data():
 df = load_data()
 
 # ==========================================
-# 3. 순번 앞 2자리 기준 년도 추출 및 필터링 적용
+# 3. 순번 앞 2자리 기준 년도 추출 및 필터링 적용 (사이드바 구성)
 # ==========================================
 def extract_year_prefix(val):
     if pd.isna(val):
@@ -156,20 +156,20 @@ if seq_col_real:
 else:
     df['_년도_prefix'] = None
 
-st.markdown("---")
-st.subheader("🔍 데이터 필터링")
+# 사이드바 필터 설정 영역
+st.sidebar.header("🔍 대시보드 필터 설정")
+st.sidebar.markdown("---")
 
-# 년도 체크박스 UI 구성 (전체 선택 옵션 제거, 개별 년도만 배치)
 available_years = sorted([y for y in df['_년도_prefix'].unique() if y is not None]) if '_년도_prefix' in df.columns else []
 
+selected_years = []
 if available_years:
-    st.markdown("**📅 1차 필터: 학년도 선택**")
-    year_cols = st.columns(len(available_years))
+    st.sidebar.markdown("**📅 1차 필터: 학년도 선택**")
+    year_cols = st.sidebar.columns(len(available_years))
     
-    selected_years = []
     for idx, year_val in enumerate(available_years):
         with year_cols[idx]:
-            is_checked = st.checkbox(f"{year_val}학년도", value=True, key=f"chk_year_{year_val}")
+            is_checked = st.sidebar.checkbox(f"{year_val}학년도", value=True, key=f"chk_year_{year_val}")
             if is_checked:
                 selected_years.append(year_val)
                 
@@ -181,9 +181,9 @@ if available_years:
 else:
     filtered_df_by_year = df
 
-st.markdown("")
+st.sidebar.markdown("")
 
-# 진행상태 필터 라디오 버튼 구성
+# 진행상태 필터 라디오 버튼 구성 (사이드바)
 target_label_done = "발주완료 (납품완료 or 납품 대기)"
 
 if '진행상태' in filtered_df_by_year.columns:
@@ -194,10 +194,9 @@ if '진행상태' in filtered_df_by_year.columns:
 else:
     display_options = ['전체']
 
-selected_status = st.radio(
+selected_status = st.sidebar.radio(
     "보고 싶은 진행상태를 선택하세요:", 
-    display_options, 
-    horizontal=True
+    display_options
 )
 
 if selected_status == '전체' or '진행상태' not in filtered_df_by_year.columns:
