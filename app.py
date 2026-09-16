@@ -96,7 +96,11 @@ with title_col_qr:
 with title_col_main:
     st.markdown(
         """
-        <div style="display: flex; align-items: baseline; flex-wrap: wrap; gap: 15px; padding-top: 0.5rem;">
+        <div style="margin-bottom: 0.3rem;">
+            <span style="font-size: 1.2rem; font-weight: bold; color: #2C3E50;">의용공학팀 연결앱 : </span>
+            <a href="https://buly.kr/7mERs3u" target="_blank" style="font-size: 1.2rem; font-weight: bold; color: #2980B9; text-decoration: none;">의료장비 보유현황</a>
+        </div>
+        <div style="display: flex; align-items: baseline; flex-wrap: wrap; gap: 15px; padding-top: 0.2rem;">
             <h1 style="margin: 0; padding: 0; font-size: 2.2rem; display: inline-block;">📊 의료장비 투자집행 계획 실적 대시보드</h1>
             <span style="font-size: 1.15rem; font-weight: bold;">
                 <a href="mailto:dhkoh@inhauh.com" style="color: inherit; text-decoration: none;">제작 및 문의 : 인하대병원 의용공학팀 (dhkoh@inhauh.com)</a>
