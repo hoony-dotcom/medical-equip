@@ -17,61 +17,51 @@ elif platform.system() == 'Darwin':
 else:
     font_family = "DejaVu Sans"
 
-# 라이트/다크모드 양쪽 모두에서 글씨가 잘 보이도록 최적화된 통합 CSS 주입
+# 모바일 기기 다크모드 무시 및 항상 라이트모드(밝은 테마) 고정 CSS 주입
 st.markdown("""
 <style>
-    /* 전체 앱 기본 텍스트 색상 안정화 (다크모드 대비) */
-    html, body, [class*="st-"] {
-        color: inherit;
+    /* 브라우저/시스템 다크모드 강제 오버라이드 (항상 라이트 테마 유지) */
+    :root {
+        color-scheme: light !important;
     }
 
-    /* 메인 타이틀 및 헤더 가독성 확보 */
-    h1, h2, h3, h4, h5, h6 {
+    /* 전체 앱 배경 및 기본 글자색 고정 */
+    .stApp {
+        background-color: #FFFFFF !important;
+        color: #262730 !important;
+    }
+
+    /* 사이드바 배경 및 글자색 고정 */
+    [data-testid="stSidebar"] {
+        background-color: #F8F9FA !important;
+        color: #262730 !important;
+    }
+
+    /* 메인 타이틀 및 모든 헤더 글자색 고정 */
+    h1, h2, h3, h4, h5, h6, 
+    [data-testid="stSidebar"] h1, 
+    [data-testid="stSidebar"] h2, 
+    [data-testid="stSidebar"] h3 {
+        color: #111111 !important;
         font-weight: bold !important;
     }
 
-    /* 사이드바 전체 영역의 기본 폰트 및 글자색 강제 고정 */
-    div[data-testid="stSidebar"] {
-        font-size: 1.05rem !important;
-    }
-    
-    div[data-testid="stSidebar"] h1, 
-    div[data-testid="stSidebar"] h2, 
-    div[data-testid="stSidebar"] h3 {
-        font-size: 1.2rem !important;
+    /* 일반 본문 및 마크다운 텍스트 색상 고정 */
+    p, span, label, div[data-testid="stMarkdown"] {
+        color: #262730 !important;
     }
 
-    /* 사이드바 내 마크다운 텍스트(안내 문구 등) 글자색 보장 */
-    div[data-testid="stSidebar"] .stMarkdown p, 
-    div[data-testid="stSidebar"] span {
-        font-size: 1rem !important;
-    }
-
-    /* 사이드바 라디오 버튼 라벨(질문 문구) 글자색 */
-    div[data-testid="stSidebar"] div[row-widget="stRadio"] > label {
-        font-size: 1.05rem !important;
-        font-weight: bold !important;
-    }
-
-    /* 데이터 필터링(라디오 버튼 항목) 폰트 크기 및 색상 조절 */
+    /* 사이드바 라디오 버튼 / 체크박스 글자색 고정 */
+    div[data-testid="stSidebar"] div[row-widget="stRadio"] > label,
     div[data-testid="stSidebar"] .stRadio div[role="radiogroup"] label,
-    div[data-testid="stSidebar"] .stRadio label p {
-        font-size: 1.05rem !important; 
-    }
-    
-    /* 라디오 버튼(동그라미) 테두리 강조 */
-    div[data-testid="stSidebar"] .stRadio input[type="radio"] {
-        width: 1.1rem !important;
-        height: 1.1rem !important;
-        accent-color: #E74C3C !important;
-    }
-
-    /* 사이드바 체크박스 스타일 적용 */
+    div[data-testid="stSidebar"] .stRadio label p,
     div[data-testid="stSidebar"] .stCheckbox label,
     div[data-testid="stSidebar"] .stCheckbox label p {
+        color: #262730 !important;
         font-size: 1.05rem !important;
     }
     
+    div[data-testid="stSidebar"] .stRadio input[type="radio"],
     div[data-testid="stSidebar"] .stCheckbox input[type="checkbox"] {
         width: 1.1rem !important;
         height: 1.1rem !important;
@@ -84,27 +74,31 @@ st.markdown("""
     .stDataFrame td {
         white-space: pre-wrap !important;
         word-break: break-word !important;
+        color: #262730 !important;
     }
     
     [data-testid="stDataFrame"] {
         overflow-x: auto !important;
     }
 
-    /* 요약 지표(metric) 스타일 (다크모드에서도 글씨가 명확히 보이도록 테마 자동 대응형 배경/글자 스타일 부여) */
+    /* 요약 지표(metric) 스타일 고정 */
     [data-testid="stMetricLabel"] {
         font-size: 0.95rem !important;
+        color: #555555 !important;
         white-space: normal !important;
         word-break: keep-all !important;
     }
     [data-testid="stMetricValue"] {
         font-size: 1.4rem !important;
+        color: #111111 !important;
         white-space: normal !important;
         word-break: break-all !important;
     }
     [data-testid="stMetric"] {
+        background-color: #F8F9FA !important;
         padding: 10px 14px;
         border-radius: 8px;
-        border: 1px solid rgba(128, 128, 128, 0.2);
+        border: 1px solid #E5E7EB !important;
         box-shadow: 0 1px 3px rgba(0,0,0,0.05);
         margin-bottom: 8px;
     }
@@ -184,18 +178,18 @@ if seq_col_real:
 else:
     df['_년도_prefix'] = None
 
-# 사이드바 상단에 제작 및 문의 및 관련 앱 링크 배치 (다크모드 가독성을 위해 인라인 색상 스타일 보완)
+# 사이드바 상단에 제작 및 문의 및 관련 앱 링크 배치
 st.sidebar.markdown(
     """
-    <div style="padding: 12px; border-radius: 6px; border: 1px solid rgba(128,128,128,0.3); margin-bottom: 15px;">
-        <span style="font-size: 0.95rem; font-weight: bold;">🛠️ 제작 및 문의</span><br>
-        <span style="font-size: 0.9rem;">인하대병원 의용공학팀</span><br>
-        <a href="mailto:dhkoh@inhauh.com" style="font-size: 0.9rem; text-decoration: none;">dhkoh@inhauh.com</a>
-        <hr style="margin: 8px 0; border: none; border-top: 1px solid rgba(128,128,128,0.3);">
-        <span style="font-size: 0.95rem; font-weight: bold;">🔗 의용공학팀 개발 앱</span><br>
+    <div style="background-color: #FFFFFF; padding: 12px; border-radius: 6px; border: 1px solid #E5E7EB; margin-bottom: 15px;">
+        <span style="font-size: 0.95rem; font-weight: bold; color: #111111;">🛠️ 제작 및 문의</span><br>
+        <span style="font-size: 0.9rem; color: #333333;">인하대병원 의용공학팀</span><br>
+        <a href="mailto:dhkoh@inhauh.com" style="font-size: 0.9rem; color: #2980B9; text-decoration: none;">dhkoh@inhauh.com</a>
+        <hr style="margin: 8px 0; border: none; border-top: 1px solid #E5E7EB;">
+        <span style="font-size: 0.95rem; font-weight: bold; color: #111111;">🔗 의용공학팀 개발 앱</span><br>
         <div style="margin-top: 5px; font-size: 0.88rem; line-height: 1.4;">
-            1. <a href="https://buly.kr/DEbvdwF" target="_blank" style="text-decoration: none;">의료장비 투자집행 계획 실적</a><br>
-            2. <a href="https://buly.kr/7mERs3u" target="_blank" style="text-decoration: none;">의료장비 현황 바로가기</a>
+            1. <a href="https://buly.kr/DEbvdwF" target="_blank" style="color: #2980B9; text-decoration: none;">의료장비 투자집행 계획 실적</a><br>
+            2. <a href="https://buly.kr/7mERs3u" target="_blank" style="color: #2980B9; text-decoration: none;">의료장비 현황 바로가기</a>
         </div>
     </div>
     """,
