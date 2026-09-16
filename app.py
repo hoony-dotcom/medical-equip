@@ -5,8 +5,8 @@ import plotly.express as px
 import plotly.io as pio
 import platform
 
-# 1. 웹 페이지 기본 설정
-st.set_page_config(page_title="의료장비 투자집행 대시보드", layout="wide", initial_sidebar_state="auto")
+# 1. 웹 페이지 기본 설정 (사이드바 초기 상태는 "auto" 또는 "expanded"로 시작)
+st.set_page_config(page_title="의료장비 투자집행 대시보드", layout="wide", initial_sidebar_state="expanded")
 
 # Plotly 기본 폰트 설정 (Windows: 맑은 고딕, Mac: Apple Gothic)
 pio.templates.default = "plotly_white"
@@ -122,15 +122,50 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# 메인 타이틀 배치
-st.markdown(
-    """
-    <div style="padding-top: 0.2rem;">
-        <h1 style="margin: 0; padding: 0; font-size: 2rem; display: inline-block;">📊 의료장비 투자집행 계획 실적 대시보드</h1>
-    </div>
-    """,
-    unsafe_allow_html=True
-)
+# ==========================================
+# 사이드바 열기/닫기 상태 관리 세션 설정
+# ==========================================
+if "sidebar_state" not in st.session_state:
+    st.session_state.sidebar_state = True  # 기본적으로 열린 상태
+
+def toggle_sidebar():
+    st.session_state.sidebar_state = not st.session_state.sidebar_state
+
+# Streamlit 최신 기능으로 사이드바 상태 제어 (여백 없이 깔끔하게 숨김/표시 제어)
+st.set_option("client.showSidebarNavigation", False) # 내부 내비게이션 옵션 무관하게 작동하도록 설정
+
+# CSS를 통한 사이드바 강제 숨김/표시 처리
+if not st.session_state.sidebar_state:
+    st.markdown("""
+        <style>
+            [data-testid="stSidebar"] {
+                display: none !important;
+            }
+            [data-testid="collapsedControl"] {
+                display: none !important;
+            }
+        </style>
+    """, unsafe_allow_html=True)
+
+# 메인 타이틀 배치 및 사이드바 토글 버튼 배치 영역
+header_col1, header_col2 = st.columns([5, 1])
+
+with header_col1:
+    st.markdown(
+        """
+        <div style="padding-top: 0.2rem;">
+            <h1 style="margin: 0; padding: 0; font-size: 2rem; display: inline-block;">📊 의료장비 투자집행 계획 실적 대시보드</h1>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+with header_col2:
+    st.markdown("<div style='height: 10px;'></div>", unsafe_allow_html=True) # 상단 여백 맞춤
+    btn_label = "사이드바 닫기" if st.session_state.sidebar_state else "사이드바 열기"
+    if st.button(btn_label, key="sidebar_toggle_btn", use_container_width=True):
+        toggle_sidebar()
+        st.rerun()
 
 st.markdown(
     "**기준일:** 2026. 09. 15. (단위: 천원) | 2025, 2026학년도<br>"
