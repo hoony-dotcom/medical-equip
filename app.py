@@ -5,7 +5,7 @@ import plotly.express as px
 import plotly.io as pio
 import platform
 
-# 1. 웹 페이지 기본 설정 (모바일 반응형 고려 initial_sidebar_state 설정)
+# 1. 웹 페이지 기본 설정
 st.set_page_config(page_title="의료장비 투자집행 대시보드", layout="wide", initial_sidebar_state="auto")
 
 # Plotly 기본 폰트 설정 (Windows: 맑은 고딕, Mac: Apple Gothic)
@@ -17,45 +17,43 @@ elif platform.system() == 'Darwin':
 else:
     font_family = "DejaVu Sans"
 
-# 모바일 및 데스크톱 반응형 통합 스타일 CSS 주입
+# 라이트/다크모드 양쪽 모두에서 글씨가 잘 보이도록 최적화된 통합 CSS 주입
 st.markdown("""
 <style>
-    /* 전체 페이지 및 사이드바 모바일 가독성 개선 */
-    @media (max-width: 768px) {
-        h1 {
-            font-size: 1.6rem !important;
-        }
-        [data-testid="stMetricValue"] {
-            font-size: 1.2rem !important;
-        }
+    /* 전체 앱 기본 텍스트 색상 안정화 (다크모드 대비) */
+    html, body, [class*="st-"] {
+        color: inherit;
     }
 
-    /* 사이드바 전체 영역의 기본 폰트 크기 조절 */
+    /* 메인 타이틀 및 헤더 가독성 확보 */
+    h1, h2, h3, h4, h5, h6 {
+        font-weight: bold !important;
+    }
+
+    /* 사이드바 전체 영역의 기본 폰트 및 글자색 강제 고정 */
     div[data-testid="stSidebar"] {
         font-size: 1.05rem !important;
     }
     
-    /* 사이드바 헤더 크기 조절 */
     div[data-testid="stSidebar"] h1, 
     div[data-testid="stSidebar"] h2, 
     div[data-testid="stSidebar"] h3 {
         font-size: 1.2rem !important;
     }
 
-    /* 사이드바 내 마크다운 텍스트 크기 조절 */
-    div[data-testid="stSidebar"] .stMarkdown p {
+    /* 사이드바 내 마크다운 텍스트(안내 문구 등) 글자색 보장 */
+    div[data-testid="stSidebar"] .stMarkdown p, 
+    div[data-testid="stSidebar"] span {
         font-size: 1rem !important;
-        font-weight: bold !important;
     }
 
-    /* 사이드바 라디오 버튼 라벨(질문 문구) 크기 조절 */
+    /* 사이드바 라디오 버튼 라벨(질문 문구) 글자색 */
     div[data-testid="stSidebar"] div[row-widget="stRadio"] > label {
         font-size: 1.05rem !important;
         font-weight: bold !important;
-        color: #2C3E50 !important;
     }
 
-    /* 데이터 필터링(라디오 버튼 항목) 폰트 크기 조절 */
+    /* 데이터 필터링(라디오 버튼 항목) 폰트 크기 및 색상 조절 */
     div[data-testid="stSidebar"] .stRadio div[role="radiogroup"] label,
     div[data-testid="stSidebar"] .stRadio label p {
         font-size: 1.05rem !important; 
@@ -65,11 +63,7 @@ st.markdown("""
     div[data-testid="stSidebar"] .stRadio input[type="radio"] {
         width: 1.1rem !important;
         height: 1.1rem !important;
-        accent-color: #000000 !important;
-    }
-    
-    div[data-testid="stSidebar"] .stRadio div[role="radiogroup"] input[type="radio"] {
-        border: 2px solid #333333 !important;
+        accent-color: #E74C3C !important;
     }
 
     /* 사이드바 체크박스 스타일 적용 */
@@ -92,12 +86,11 @@ st.markdown("""
         word-break: break-word !important;
     }
     
-    /* 표 전체 영역에 가로/세로 스크롤이 원활히 작동하도록 스타일 보완 */
     [data-testid="stDataFrame"] {
         overflow-x: auto !important;
     }
 
-    /* 요약 지표(metric) 글자 크기 조정 및 잘림 방지용 줄바꿈 처리 */
+    /* 요약 지표(metric) 스타일 (다크모드에서도 글씨가 명확히 보이도록 테마 자동 대응형 배경/글자 스타일 부여) */
     [data-testid="stMetricLabel"] {
         font-size: 0.95rem !important;
         white-space: normal !important;
@@ -109,14 +102,14 @@ st.markdown("""
         word-break: break-all !important;
     }
     [data-testid="stMetric"] {
-        background-color: #F8F9FA;
         padding: 10px 14px;
         border-radius: 8px;
+        border: 1px solid rgba(128, 128, 128, 0.2);
         box-shadow: 0 1px 3px rgba(0,0,0,0.05);
         margin-bottom: 8px;
     }
 
-    /* '해당 리스트 열기' 버튼 스타일 (모바일에서도 누르기 쉽게 조정) */
+    /* '해당 리스트 열기' 버튼 스타일 */
     div.stButton > button {
         background-color: #E74C3C !important;
         color: #FFFFFF !important;
@@ -191,18 +184,18 @@ if seq_col_real:
 else:
     df['_년도_prefix'] = None
 
-# 사이드바 상단에 제작 및 문의 및 관련 앱 링크 배치
+# 사이드바 상단에 제작 및 문의 및 관련 앱 링크 배치 (다크모드 가독성을 위해 인라인 색상 스타일 보완)
 st.sidebar.markdown(
     """
-    <div style="background-color: #F8F9FA; padding: 12px; border-radius: 6px; border: 1px solid #E9ECEF; margin-bottom: 15px;">
-        <span style="font-size: 0.95rem; font-weight: bold; color: #2C3E50;">🛠️ 제작 및 문의</span><br>
+    <div style="padding: 12px; border-radius: 6px; border: 1px solid rgba(128,128,128,0.3); margin-bottom: 15px;">
+        <span style="font-size: 0.95rem; font-weight: bold;">🛠️ 제작 및 문의</span><br>
         <span style="font-size: 0.9rem;">인하대병원 의용공학팀</span><br>
-        <a href="mailto:dhkoh@inhauh.com" style="font-size: 0.9rem; color: #2980B9; text-decoration: none;">dhkoh@inhauh.com</a>
-        <hr style="margin: 8px 0; border: none; border-top: 1px solid #DDD;">
-        <span style="font-size: 0.95rem; font-weight: bold; color: #2C3E50;">🔗 의용공학팀 개발 앱</span><br>
+        <a href="mailto:dhkoh@inhauh.com" style="font-size: 0.9rem; text-decoration: none;">dhkoh@inhauh.com</a>
+        <hr style="margin: 8px 0; border: none; border-top: 1px solid rgba(128,128,128,0.3);">
+        <span style="font-size: 0.95rem; font-weight: bold;">🔗 의용공학팀 개발 앱</span><br>
         <div style="margin-top: 5px; font-size: 0.88rem; line-height: 1.4;">
-            1. <a href="https://buly.kr/DEbvdwF" target="_blank" style="color: #2980B9; text-decoration: none;">의료장비 투자집행 계획 실적</a><br>
-            2. <a href="https://buly.kr/7mERs3u" target="_blank" style="color: #2980B9; text-decoration: none;">의료장비 현황 바로가기</a>
+            1. <a href="https://buly.kr/DEbvdwF" target="_blank" style="text-decoration: none;">의료장비 투자집행 계획 실적</a><br>
+            2. <a href="https://buly.kr/7mERs3u" target="_blank" style="text-decoration: none;">의료장비 현황 바로가기</a>
         </div>
     </div>
     """,
@@ -311,7 +304,7 @@ def show_detail_dialog(target_df, status_name):
         st.warning("선택하신 조건에 해당하는 데이터가 없습니다.")
 
 # ==========================================
-# 5. 핵심 요약 지표 및 버튼 레이아웃 (모바일 대응 2단 그리드 구성)
+# 5. 핵심 요약 지표 및 버튼 레이아웃
 # ==========================================
 st.markdown("---")
 st.subheader(f"📈 요약 지표 ({selected_status})")
@@ -328,7 +321,6 @@ else:
     execution_rate_count = (filtered_count / total_original_count * 100) if total_original_count > 0 else 0
     rate_count_display = f"{execution_rate_count:.1f}%"
 
-# 모바일 화면 크기에서도 지표가 찌그러지지 않도록 열 배분 최적화
 r1_c1, r1_c2, r1_c3 = st.columns(3)
 r1_c1.metric("💰 승인금액 합계", f"{total_approved:,.0f} 천원")
 r1_c2.metric("💳 계약금액 합계", f"{total_contract:,.0f} 천원")
@@ -345,7 +337,7 @@ if st.button("해당 리스트 열기 ↗", key="open_popup_btn", use_container_
 st.markdown("---")
 
 # ==========================================
-# 6. 차트 시각화 영역 (반응형 적응)
+# 6. 차트 시각화 영역
 # ==========================================
 custom_order = ['완료', '진행중(발주완료)', '진행중', '진행예정', '검토필요', '보류', ' 취소', '취소']
 color_map = {
