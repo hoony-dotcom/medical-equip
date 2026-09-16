@@ -2,13 +2,78 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
+import plotly.io as pio
+import platform
 
 # 1. 웹 페이지 기본 설정
 st.set_page_config(page_title="의료장비 투자집행 대시보드", layout="wide")
 
-# 줄바꿈, 좌우 스크롤, 라디오 버튼, 체크박스 크기, 요약 지표 글자 크기 축소 및 버튼 스타일 커스텀 CSS 주입
+# Plotly 기본 폰트 설정 (Windows: 맑은 고딕, Mac: Apple Gothic)
+pio.templates.default = "plotly_white"
+if platform.system() == 'Windows':
+    font_family = "Malgun Gothic"
+elif platform.system() == 'Darwin':
+    font_family = "AppleGothic"
+else:
+    font_family = "DejaVu Sans"
+
+# 줄바꿈, 좌우 스크롤, 라디오 버튼, 체크박스 크기, 요약 지표 글자 크기 및 줄바꿈 최적화 CSS 주입
 st.markdown("""
 <style>
+    /* 사이드바 전체 영역의 기본 폰트 크기 조절 (1차 필터 크기와 일치화) */
+    div[data-testid="stSidebar"] {
+        font-size: 1.1rem !important;
+    }
+    
+    /* 사이드바 헤더 (대시보드 필터 설정) 크기 조절 */
+    div[data-testid="stSidebar"] h1, 
+    div[data-testid="stSidebar"] h2, 
+    div[data-testid="stSidebar"] h3 {
+        font-size: 1.3rem !important;
+    }
+
+    /* 사이드바 내 마크다운 텍스트(1차 필터 안내 등) 크기 조절 */
+    div[data-testid="stSidebar"] .stMarkdown p {
+        font-size: 1.1rem !important;
+        font-weight: bold !important;
+    }
+
+    /* 사이드바 라디오 버튼 라벨(질문 문구) 크기 조절 */
+    div[data-testid="stSidebar"] div[row-widget="stRadio"] > label {
+        font-size: 1.1rem !important;
+        font-weight: bold !important;
+        color: #2C3E50 !important;
+    }
+
+    /* 데이터 필터링(라디오 버튼 항목) 폰트 크기 조절 */
+    div[data-testid="stSidebar"] .stRadio div[role="radiogroup"] label,
+    div[data-testid="stSidebar"] .stRadio label p {
+        font-size: 1.1rem !important; 
+    }
+    
+    /* 라디오 버튼(동그라미) 테두리를 진하게 및 두껍게 강조 */
+    div[data-testid="stSidebar"] .stRadio input[type="radio"] {
+        width: 1.1rem !important;
+        height: 1.1rem !important;
+        accent-color: #000000 !important;
+    }
+    
+    div[data-testid="stSidebar"] .stRadio div[role="radiogroup"] input[type="radio"] {
+        border: 2px solid #333333 !important;
+    }
+
+    /* 사이드바 체크박스 스타일 적용 */
+    div[data-testid="stSidebar"] .stCheckbox label,
+    div[data-testid="stSidebar"] .stCheckbox label p {
+        font-size: 1.1rem !important;
+    }
+    
+    div[data-testid="stSidebar"] .stCheckbox input[type="checkbox"] {
+        width: 1.2rem !important;
+        height: 1.2rem !important;
+        accent-color: #E74C3C !important;
+    }
+
     /* 데이터프레임 셀 내부 텍스트 자동 줄바꿈 설정 */
     [data-testid="stDataFrame"] div[data-testid="stTable"] td,
     [data-testid="stDataFrame"] table div,
@@ -22,46 +87,22 @@ st.markdown("""
         overflow-x: auto !important;
     }
 
-    /* 데이터 필터링(라디오 버튼) 폰트 크기 조절 (약 1.3rem) */
-    div[row-widget="stRadio"] label, 
-    .stRadio div[role="radiogroup"] label {
-        font-size: 1.3rem !important; 
-    }
-    
-    .stRadio label p {
-        font-size: 1.3rem !important;
-    }
-
-    /* 라디오 버튼(동그라미) 테두리를 진하게 및 두껍게 강조 */
-    .stRadio input[type="radio"] {
-        width: 1.2rem !important;
-        height: 1.2rem !important;
-        accent-color: #000000 !important;
-    }
-    
-    .stRadio div[role="radiogroup"] input[type="radio"] {
-        border: 2px solid #333333 !important;
-    }
-
-    /* 1.5배 커진 체크박스 스타일 적용 */
-    .stCheckbox label {
-        font-size: 1.2rem !important;
-    }
-    .stCheckbox label p {
-        font-size: 1.2rem !important;
-    }
-    .stCheckbox input[type="checkbox"] {
-        width: 1.4rem !important;
-        height: 1.4rem !important;
-        accent-color: #E74C3C !important;
-    }
-
-    /* 요약 지표(metric) 글자 크기 30% 축소 */
+    /* 요약 지표(metric) 글자 크기 조정 및 잘림 방지용 줄바꿈 처리 */
     [data-testid="stMetricLabel"] {
-        font-size: 0.9rem !important;
+        font-size: 0.95rem !important;
+        white-space: normal !important;
+        word-break: keep-all !important;
     }
     [data-testid="stMetricValue"] {
-        font-size: 1.5rem !important;
+        font-size: 1.4rem !important;
+        white-space: normal !important;
+        word-break: break-all !important;
+    }
+    [data-testid="stMetric"] {
+        background-color: #F8F9FA;
+        padding: 10px 15px;
+        border-radius: 8px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
     }
 
     /* '해당 리스트 열기' 버튼 스타일 (빨간색 배경, 흰색 글씨, 진한 글씨체, 2배 크기) */
@@ -82,33 +123,22 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# 타이틀과 QR 이미지 링크, 그리고 타이틀 바로 옆 제작 및 문의 문구 배치 (타이틀과 동일한 색상 적용)
-title_col_qr, title_col_main = st.columns([0.8, 4.2])
-with title_col_qr:
-    st.image("바로가기 QR.png", width=150)
-    st.markdown(
-        "<div style='text-align: center; margin-top: -0.5rem;'>"
-        "<a href='https://buly.kr/DEbvdwF' target='_blank' style='color: #2980B9; text-decoration: none; font-size: 1.6rem; font-weight: bold;'>🔗 바로가기 링크</a>"
-        "<br><span style='color: #555555; font-size: 1.5rem; font-weight: bold;'>https://buly.kr/DEbvdwF</span>"
-        "</div>",
-        unsafe_allow_html=True
-    )
-with title_col_main:
-    st.markdown(
-        """
-        <div style="margin-bottom: 0.3rem;">
-            <span style="font-size: 1.2rem; font-weight: bold; color: #2C3E50;">의용공학팀 연결앱 : </span>
-            <a href="https://buly.kr/7mERs3u" target="_blank" style="font-size: 1.2rem; font-weight: bold; color: #2980B9; text-decoration: none;">의료장비 보유현황</a>
-        </div>
-        <div style="display: flex; align-items: baseline; flex-wrap: wrap; gap: 15px; padding-top: 0.2rem;">
-            <h1 style="margin: 0; padding: 0; font-size: 2.2rem; display: inline-block;">📊 의료장비 투자집행 계획 실적 대시보드</h1>
-            <span style="font-size: 1.15rem; font-weight: bold;">
-                <a href="mailto:dhkoh@inhauh.com" style="color: inherit; text-decoration: none;">제작 및 문의 : 인하대병원 의용공학팀 (dhkoh@inhauh.com)</a>
-            </span>
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
+# 타이틀 및 제작/문의 문구 배치
+st.markdown(
+    """
+    <div style="margin-bottom: 0.3rem;">
+        <span style="font-size: 1.2rem; font-weight: bold; color: #2C3E50;">의용공학팀 연결앱 : </span>
+        <a href="https://buly.kr/7mERs3u" target="_blank" style="font-size: 1.2rem; font-weight: bold; color: #2980B9; text-decoration: none;">의료장비 보유현황</a>
+    </div>
+    <div style="display: flex; align-items: baseline; flex-wrap: wrap; gap: 15px; padding-top: 0.2rem;">
+        <h1 style="margin: 0; padding: 0; font-size: 2.2rem; display: inline-block;">📊 의료장비 투자집행 계획 실적 대시보드</h1>
+        <span style="font-size: 1.15rem; font-weight: bold;">
+            <a href="mailto:dhkoh@inhauh.com" style="color: inherit; text-decoration: none;">제작 및 문의 : 인하대병원 의용공학팀 (dhkoh@inhauh.com)</a>
+        </span>
+    </div>
+    """,
+    unsafe_allow_html=True
+)
 
 st.markdown(
     "**기준일:** 2026. 09. 15. (단위: 천원) | 2025, 2026학년도 | 엑셀 파일이 수정되면 새로고침 시 자동 반영됩니다.<br><br>"
@@ -275,7 +305,7 @@ else:
     execution_rate_count = (filtered_count / total_original_count * 100) if total_original_count > 0 else 0
     rate_count_display = f"{execution_rate_count:.1f}%"
 
-_, metric_box_col, _ = st.columns([0.5, 9, 0.5])
+_, metric_box_col, _ = st.columns([0.1, 9.8, 0.1])
 with metric_box_col:
     m1, m2, m3, m4, m5 = st.columns(5)
     m1.metric("💰 승인금액 합계", f"{total_approved:,.0f} 천원")
@@ -293,7 +323,7 @@ with center_col:
 st.markdown("---")
 
 # ==========================================
-# 6. 차트 시각화 영역 (필터링된 데이터 반영 및 그래프 글자 크기 17 적용)
+# 6. 차트 시각화 영역 (한글 폰트 적용 완료)
 # ==========================================
 custom_order = ['완료', '진행중(발주완료)', '진행중', '진행예정', '검토필요', '보류', ' 취소', '취소']
 color_map = {
@@ -331,7 +361,7 @@ with chart_col1:
             yaxis={'categoryorder': 'array', 'categoryarray': status_counts['진행상태'][::-1]},
             xaxis={'range': [0, max_val * 1.25]},
             showlegend=False,
-            font=dict(size=17)
+            font=dict(size=17, family=font_family)
         )
         fig_status_count.update_traces(textposition='outside', textfont_size=17)
         st.plotly_chart(fig_status_count, use_container_width=True, config={'staticPlot': True})
@@ -356,7 +386,7 @@ with chart_col2:
             yaxis={'categoryorder': 'array', 'categoryarray': status_amounts['진행상태'][::-1]},
             xaxis={'range': [0, max_amt * 1.3]},
             showlegend=False,
-            font=dict(size=17)
+            font=dict(size=17, family=font_family)
         )
         fig_status_amount.update_traces(textposition='outside', textfont_size=17)
         st.plotly_chart(fig_status_amount, use_container_width=True, config={'staticPlot': True})
@@ -381,7 +411,7 @@ with chart_col3:
         fig_dept.update_layout(
             yaxis={'categoryorder': 'total ascending'},
             xaxis={'range': [0, max_dept * 1.3]},
-            font=dict(size=17)
+            font=dict(size=17, family=font_family)
         )
         fig_dept.update_traces(textposition='outside', textfont_size=17)
         st.plotly_chart(fig_dept, use_container_width=True, config={'staticPlot': True})
