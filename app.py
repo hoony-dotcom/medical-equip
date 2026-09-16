@@ -89,20 +89,21 @@ st.markdown("""
 
     /* 요약 지표(metric) 글자 크기 조정 및 잘림 방지용 줄바꿈 처리 */
     [data-testid="stMetricLabel"] {
-        font-size: 0.95rem !important;
+        font-size: 1rem !important;
         white-space: normal !important;
         word-break: keep-all !important;
     }
     [data-testid="stMetricValue"] {
-        font-size: 1.4rem !important;
+        font-size: 1.5rem !important;
         white-space: normal !important;
         word-break: break-all !important;
     }
     [data-testid="stMetric"] {
         background-color: #F8F9FA;
-        padding: 10px 15px;
+        padding: 12px 18px;
         border-radius: 8px;
         box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        margin-bottom: 10px;
     }
 
     /* '해당 리스트 열기' 버튼 스타일 (빨간색 배경, 흰색 글씨, 진한 글씨체, 2배 크기) */
@@ -123,18 +124,11 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# 타이틀 및 제작/문의 문구 배치
+# 메인 타이틀 배치 (제작 및 문의 정보 제거됨)
 st.markdown(
     """
-    <div style="margin-bottom: 0.3rem;">
-        <span style="font-size: 1.2rem; font-weight: bold; color: #2C3E50;">의용공학팀 연결앱 : </span>
-        <a href="https://buly.kr/7mERs3u" target="_blank" style="font-size: 1.2rem; font-weight: bold; color: #2980B9; text-decoration: none;">의료장비 보유현황</a>
-    </div>
-    <div style="display: flex; align-items: baseline; flex-wrap: wrap; gap: 15px; padding-top: 0.2rem;">
+    <div style="padding-top: 0.2rem;">
         <h1 style="margin: 0; padding: 0; font-size: 2.2rem; display: inline-block;">📊 의료장비 투자집행 계획 실적 대시보드</h1>
-        <span style="font-size: 1.15rem; font-weight: bold;">
-            <a href="mailto:dhkoh@inhauh.com" style="color: inherit; text-decoration: none;">제작 및 문의 : 인하대병원 의용공학팀 (dhkoh@inhauh.com)</a>
-        </span>
     </div>
     """,
     unsafe_allow_html=True
@@ -185,6 +179,18 @@ if seq_col_real:
     df['_년도_prefix'] = df[seq_col_real].apply(extract_year_prefix)
 else:
     df['_년도_prefix'] = None
+
+# 사이드바 상단에 제작 및 문의 정보 배치
+st.sidebar.markdown(
+    """
+    <div style="background-color: #F8F9FA; padding: 10px 12px; border-radius: 6px; border: 1px solid #E9ECEF; margin-bottom: 15px;">
+        <span style="font-size: 0.95rem; font-weight: bold; color: #2C3E50;">🛠️ 제작 및 문의</span><br>
+        <span style="font-size: 0.9rem;">인하대병원 의용공학팀</span><br>
+        <a href="mailto:dhkoh@inhauh.com" style="font-size: 0.9rem; color: #2980B9; text-decoration: none;">dhkoh@inhauh.com</a>
+    </div>
+    """,
+    unsafe_allow_html=True
+)
 
 # 사이드바 필터 설정 영역
 st.sidebar.header("🔍 대시보드 필터 설정")
@@ -288,7 +294,7 @@ def show_detail_dialog(target_df, status_name):
         st.warning("선택하신 조건에 해당하는 데이터가 없습니다.")
 
 # ==========================================
-# 5. 핵심 요약 지표 및 화면 정중앙 '해당 리스트 열기' 버튼 배치
+# 5. 핵심 요약 지표 (3단 그리드 레이아웃 적용) 및 '해당 리스트 열기' 버튼
 # ==========================================
 st.markdown("---")
 st.subheader(f"📈 요약 지표 ({selected_status})")
@@ -307,12 +313,16 @@ else:
 
 _, metric_box_col, _ = st.columns([0.1, 9.8, 0.1])
 with metric_box_col:
-    m1, m2, m3, m4, m5 = st.columns(5)
-    m1.metric("💰 승인금액 합계", f"{total_approved:,.0f} 천원")
-    m2.metric("💳 계약금액 합계", f"{total_contract:,.0f} 천원")
-    m3.metric("📊 승인가 대비 계약가", f"{execution_rate_amount:.1f}%")
-    m4.metric("📝 건수 (조회 / 전체)", f"{filtered_count} 건 / {total_original_count} 건")
-    m5.metric("📈 집행비율(건수)", rate_count_display)
+    # 첫 번째 줄 (3개)
+    r1_c1, r1_c2, r1_c3 = st.columns(3)
+    r1_c1.metric("💰 승인금액 합계", f"{total_approved:,.0f} 천원")
+    r1_c2.metric("💳 계약금액 합계", f"{total_contract:,.0f} 천원")
+    r1_c3.metric("📊 승인가 대비 계약가", f"{execution_rate_amount:.1f}%")
+    
+    # 두 번째 줄 (나머지 2개)
+    r2_c1, r2_c2, r2_c3 = st.columns(3)
+    r2_c1.metric("📝 건수 (조회 / 전체)", f"{filtered_count} 건 / {total_original_count} 건")
+    r2_c2.metric("📈 집행비율(건수)", rate_count_display)
 
 st.markdown("")
 _, center_col, _ = st.columns([1.5, 3, 1.5])
