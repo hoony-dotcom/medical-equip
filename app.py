@@ -5,8 +5,8 @@ import plotly.express as px
 import plotly.io as pio
 import platform
 
-# 1. 웹 페이지 기본 설정
-st.set_page_config(page_title="의료장비 투자집행 대시보드", layout="wide")
+# 1. 웹 페이지 기본 설정 (모바일 반응형 고려 initial_sidebar_state 설정)
+st.set_page_config(page_title="의료장비 투자집행 대시보드", layout="wide", initial_sidebar_state="auto")
 
 # Plotly 기본 폰트 설정 (Windows: 맑은 고딕, Mac: Apple Gothic)
 pio.templates.default = "plotly_white"
@@ -17,30 +17,40 @@ elif platform.system() == 'Darwin':
 else:
     font_family = "DejaVu Sans"
 
-# 줄바꿈, 좌우 스크롤, 라디오 버튼, 체크박스 크기, 요약 지표 글자 크기 및 줄바꿈 최적화 CSS 주입
+# 모바일 및 데스크톱 반응형 통합 스타일 CSS 주입
 st.markdown("""
 <style>
-    /* 사이드바 전체 영역의 기본 폰트 크기 조절 (1차 필터 크기와 일치화) */
+    /* 전체 페이지 및 사이드바 모바일 가독성 개선 */
+    @media (max-width: 768px) {
+        h1 {
+            font-size: 1.6rem !important;
+        }
+        [data-testid="stMetricValue"] {
+            font-size: 1.2rem !important;
+        }
+    }
+
+    /* 사이드바 전체 영역의 기본 폰트 크기 조절 */
     div[data-testid="stSidebar"] {
-        font-size: 1.1rem !important;
+        font-size: 1.05rem !important;
     }
     
-    /* 사이드바 헤더 (대시보드 필터 설정) 크기 조절 */
+    /* 사이드바 헤더 크기 조절 */
     div[data-testid="stSidebar"] h1, 
     div[data-testid="stSidebar"] h2, 
     div[data-testid="stSidebar"] h3 {
-        font-size: 1.3rem !important;
+        font-size: 1.2rem !important;
     }
 
-    /* 사이드바 내 마크다운 텍스트(1차 필터 안내 등) 크기 조절 */
+    /* 사이드바 내 마크다운 텍스트 크기 조절 */
     div[data-testid="stSidebar"] .stMarkdown p {
-        font-size: 1.1rem !important;
+        font-size: 1rem !important;
         font-weight: bold !important;
     }
 
     /* 사이드바 라디오 버튼 라벨(질문 문구) 크기 조절 */
     div[data-testid="stSidebar"] div[row-widget="stRadio"] > label {
-        font-size: 1.1rem !important;
+        font-size: 1.05rem !important;
         font-weight: bold !important;
         color: #2C3E50 !important;
     }
@@ -48,10 +58,10 @@ st.markdown("""
     /* 데이터 필터링(라디오 버튼 항목) 폰트 크기 조절 */
     div[data-testid="stSidebar"] .stRadio div[role="radiogroup"] label,
     div[data-testid="stSidebar"] .stRadio label p {
-        font-size: 1.1rem !important; 
+        font-size: 1.05rem !important; 
     }
     
-    /* 라디오 버튼(동그라미) 테두리를 진하게 및 두껍게 강조 */
+    /* 라디오 버튼(동그라미) 테두리 강조 */
     div[data-testid="stSidebar"] .stRadio input[type="radio"] {
         width: 1.1rem !important;
         height: 1.1rem !important;
@@ -65,12 +75,12 @@ st.markdown("""
     /* 사이드바 체크박스 스타일 적용 */
     div[data-testid="stSidebar"] .stCheckbox label,
     div[data-testid="stSidebar"] .stCheckbox label p {
-        font-size: 1.1rem !important;
+        font-size: 1.05rem !important;
     }
     
     div[data-testid="stSidebar"] .stCheckbox input[type="checkbox"] {
-        width: 1.2rem !important;
-        height: 1.2rem !important;
+        width: 1.1rem !important;
+        height: 1.1rem !important;
         accent-color: #E74C3C !important;
     }
 
@@ -89,32 +99,33 @@ st.markdown("""
 
     /* 요약 지표(metric) 글자 크기 조정 및 잘림 방지용 줄바꿈 처리 */
     [data-testid="stMetricLabel"] {
-        font-size: 1rem !important;
+        font-size: 0.95rem !important;
         white-space: normal !important;
         word-break: keep-all !important;
     }
     [data-testid="stMetricValue"] {
-        font-size: 1.5rem !important;
+        font-size: 1.4rem !important;
         white-space: normal !important;
         word-break: break-all !important;
     }
     [data-testid="stMetric"] {
         background-color: #F8F9FA;
-        padding: 12px 18px;
+        padding: 10px 14px;
         border-radius: 8px;
         box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-        margin-bottom: 10px;
+        margin-bottom: 8px;
     }
 
-    /* '해당 리스트 열기' 버튼 스타일 (빨간색 배경, 흰색 글씨, 진한 글씨체, 2배 크기) */
+    /* '해당 리스트 열기' 버튼 스타일 (모바일에서도 누르기 쉽게 조정) */
     div.stButton > button {
         background-color: #E74C3C !important;
         color: #FFFFFF !important;
-        font-size: 2rem !important;
+        font-size: 1.4rem !important;
         font-weight: bold !important;
-        padding: 0.5rem 2rem !important;
+        padding: 0.5rem 1rem !important;
         border-radius: 8px !important;
         border: none !important;
+        width: 100% !important;
     }
     
     div.stButton > button:hover {
@@ -128,14 +139,14 @@ st.markdown("""
 st.markdown(
     """
     <div style="padding-top: 0.2rem;">
-        <h1 style="margin: 0; padding: 0; font-size: 2.2rem; display: inline-block;">📊 의료장비 투자집행 계획 실적 대시보드</h1>
+        <h1 style="margin: 0; padding: 0; font-size: 2rem; display: inline-block;">📊 의료장비 투자집행 계획 실적 대시보드</h1>
     </div>
     """,
     unsafe_allow_html=True
 )
 
 st.markdown(
-    "**기준일:** 2026. 09. 15. (단위: 천원) | 2025, 2026학년도 | 엑셀 파일이 수정되면 새로고침 시 자동 반영됩니다.<br><br>"
+    "**기준일:** 2026. 09. 15. (단위: 천원) | 2025, 2026학년도<br>"
     "계약금액 \"Hidden\"으로 표시합니다. (대외비)",
     unsafe_allow_html=True
 )
@@ -300,7 +311,7 @@ def show_detail_dialog(target_df, status_name):
         st.warning("선택하신 조건에 해당하는 데이터가 없습니다.")
 
 # ==========================================
-# 5. 핵심 요약 지표 (3단 그리드 레이아웃 적용) 및 '해당 리스트 열기' 버튼
+# 5. 핵심 요약 지표 및 버튼 레이아웃 (모바일 대응 2단 그리드 구성)
 # ==========================================
 st.markdown("---")
 st.subheader(f"📈 요약 지표 ({selected_status})")
@@ -317,29 +328,24 @@ else:
     execution_rate_count = (filtered_count / total_original_count * 100) if total_original_count > 0 else 0
     rate_count_display = f"{execution_rate_count:.1f}%"
 
-_, metric_box_col, _ = st.columns([0.1, 9.8, 0.1])
-with metric_box_col:
-    # 첫 번째 줄 (3개)
-    r1_c1, r1_c2, r1_c3 = st.columns(3)
-    r1_c1.metric("💰 승인금액 합계", f"{total_approved:,.0f} 천원")
-    r1_c2.metric("💳 계약금액 합계", f"{total_contract:,.0f} 천원")
-    r1_c3.metric("📊 승인가 대비 계약가", f"{execution_rate_amount:.1f}%")
-    
-    # 두 번째 줄 (나머지 2개)
-    r2_c1, r2_c2, r2_c3 = st.columns(3)
-    r2_c1.metric("📝 건수 (조회 / 전체)", f"{filtered_count} 건 / {total_original_count} 건")
-    r2_c2.metric("📈 집행비율(건수)", rate_count_display)
+# 모바일 화면 크기에서도 지표가 찌그러지지 않도록 열 배분 최적화
+r1_c1, r1_c2, r1_c3 = st.columns(3)
+r1_c1.metric("💰 승인금액 합계", f"{total_approved:,.0f} 천원")
+r1_c2.metric("💳 계약금액 합계", f"{total_contract:,.0f} 천원")
+r1_c3.metric("📊 승인가 대비 계약가", f"{execution_rate_amount:.1f}%")
+
+r2_c1, r2_c2, r2_c3 = st.columns(3)
+r2_c1.metric("📝 건수 (조회 / 전체)", f"{filtered_count} 건 / {total_original_count} 건")
+r2_c2.metric("📈 집행비율(건수)", rate_count_display)
 
 st.markdown("")
-_, center_col, _ = st.columns([1.5, 3, 1.5])
-with center_col:
-    if st.button("해당 리스트 열기 ↗", key="open_popup_btn", use_container_width=True):
-        show_detail_dialog(filtered_df, selected_status)
+if st.button("해당 리스트 열기 ↗", key="open_popup_btn", use_container_width=True):
+    show_detail_dialog(filtered_df, selected_status)
 
 st.markdown("---")
 
 # ==========================================
-# 6. 차트 시각화 영역 (한글 폰트 적용 완료)
+# 6. 차트 시각화 영역 (반응형 적응)
 # ==========================================
 custom_order = ['완료', '진행중(발주완료)', '진행중', '진행예정', '검토필요', '보류', ' 취소', '취소']
 color_map = {
@@ -377,9 +383,10 @@ with chart_col1:
             yaxis={'categoryorder': 'array', 'categoryarray': status_counts['진행상태'][::-1]},
             xaxis={'range': [0, max_val * 1.25]},
             showlegend=False,
-            font=dict(size=17, family=font_family)
+            font=dict(size=14, family=font_family),
+            margin=dict(l=10, r=10, t=10, b=10)
         )
-        fig_status_count.update_traces(textposition='outside', textfont_size=17)
+        fig_status_count.update_traces(textposition='outside', textfont_size=14)
         st.plotly_chart(fig_status_count, use_container_width=True, config={'staticPlot': True})
     else:
         st.info("데이터가 없습니다.")
@@ -402,9 +409,10 @@ with chart_col2:
             yaxis={'categoryorder': 'array', 'categoryarray': status_amounts['진행상태'][::-1]},
             xaxis={'range': [0, max_amt * 1.3]},
             showlegend=False,
-            font=dict(size=17, family=font_family)
+            font=dict(size=14, family=font_family),
+            margin=dict(l=10, r=10, t=10, b=10)
         )
-        fig_status_amount.update_traces(textposition='outside', textfont_size=17)
+        fig_status_amount.update_traces(textposition='outside', textfont_size=14)
         st.plotly_chart(fig_status_amount, use_container_width=True, config={'staticPlot': True})
     else:
         st.info("데이터가 없습니다.")
@@ -427,9 +435,10 @@ with chart_col3:
         fig_dept.update_layout(
             yaxis={'categoryorder': 'total ascending'},
             xaxis={'range': [0, max_dept * 1.3]},
-            font=dict(size=17, family=font_family)
+            font=dict(size=14, family=font_family),
+            margin=dict(l=10, r=10, t=10, b=10)
         )
-        fig_dept.update_traces(textposition='outside', textfont_size=17)
+        fig_dept.update_traces(textposition='outside', textfont_size=14)
         st.plotly_chart(fig_dept, use_container_width=True, config={'staticPlot': True})
     else:
         st.info("데이터가 없습니다.")
