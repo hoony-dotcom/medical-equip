@@ -21,7 +21,7 @@ elif platform.system() == 'Darwin':
 else:
     font_family = "DejaVu Sans"
 
-# 모바일 기기 다크모드 무시 및 항상 라이트모드(밝은 테마) 고정 및 반응형 CSS 주입
+# 모바일 기기 다크모드 무시 및 항상 라이트모드(밝은 테마) 고정 및 아이콘 글씨 깨짐 방지 CSS 주입
 st.markdown("""
 <style>
     /* 브라우저/시스템 다크모드 강제 오버라이드 (항상 라이트 테마 유지) */
@@ -72,6 +72,11 @@ st.markdown("""
         accent-color: #E74C3C !important;
     }
 
+    /* 모바일에서 Material 아이콘이 깨져서 영문 텍스트로 노출되는 현상 방지 숨김 처리 */
+    button[kind="header"] p, [data-testid="collapsedControl"] p {
+        font-size: 0px !important;
+    }
+
     /* 데이터프레임 셀 내부 텍스트 자동 줄바꿈 설정 */
     [data-testid="stDataFrame"] div[data-testid="stTable"] td,
     [data-testid="stDataFrame"] table div,
@@ -111,9 +116,9 @@ st.markdown("""
     div.stButton > button {
         background-color: #E74C3C !important;
         color: #FFFFFF !important;
-        font-size: 1.2rem !important;
+        font-size: 1.1rem !important;
         font-weight: bold !important;
-        padding: 0.5rem 1rem !important;
+        padding: 0.4rem 0.8rem !important;
         border-radius: 8px !important;
         border: none !important;
         width: 100% !important;
@@ -127,7 +132,7 @@ st.markdown("""
     /* 모바일 환경에서 타이틀 크기 최적화 */
     @media (max-width: 768px) {
         h1 {
-            font-size: 1.5rem !important;
+            font-size: 1.4rem !important;
         }
     }
 </style>
@@ -203,14 +208,14 @@ if not st.session_state.sidebar_state:
         </style>
     """, unsafe_allow_html=True)
 
-# 모바일 화면 깨짐 방지를 위한 반응형 컬럼 비율 적용 (PC에서는 넓게, 모바일에서는 위아래 배치 유도)
-header_col1, header_col2 = st.columns([4, 1.5])
+# 모바일 화면 반응형 타이틀 및 버튼 배치
+header_col1, header_col2 = st.columns([3.8, 1.2])
 
 with header_col1:
     st.markdown(
         """
         <div style="padding-top: 0.2rem;">
-            <h1 style="margin: 0; padding: 0; font-size: 1.8rem; display: inline-block;">📊 의료장비 투자집행 계획 실적 대시보드</h1>
+            <h1 style="margin: 0; padding: 0; font-size: 1.7rem; display: inline-block;">📊 의료장비 투자집행 계획 실적 대시보드</h1>
         </div>
         """,
         unsafe_allow_html=True
