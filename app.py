@@ -9,7 +9,7 @@ import os
 import re
 from datetime import datetime
 
-# 1. 웹 페이지 기본 설정
+# 1. 웹 페이지 기본 설정 (사이드바 기본 열림 상태 유지)
 st.set_page_config(page_title="의료장비 투자집행 계획 실적 대시보드", layout="wide", initial_sidebar_state="expanded")
 
 # Plotly 기본 폰트 설정 (Windows: 맑은 고딕, Mac: Apple Gothic)
@@ -21,7 +21,7 @@ elif platform.system() == 'Darwin':
 else:
     font_family = "DejaVu Sans"
 
-# 모바일 기기 다크모드 무시 및 항상 라이트모드(밝은 테마) 고정 및 기본 화살표 글자 깨짐 버튼 강제 숨김 CSS 주입
+# 모바일 기기 다크모드 무시 및 항상 라이트모드(밝은 테마) 고정 및 깨지는 기본 토글 버튼 완전 숨김 CSS 주입
 st.markdown("""
 <style>
     /* 브라우저/시스템 다크모드 강제 오버라이드 (항상 라이트 테마 유지) */
@@ -72,7 +72,7 @@ st.markdown("""
         accent-color: #E74C3C !important;
     }
 
-    /* 스트림릿 기본 상단 토글 버튼(영문 깨짐 현상 발생하는 화살표 버튼) 완전 숨김 처리 */
+    /* ⚠️ 모바일/다크모드에서 글자로 깨지는 스트림릿 기본 사이드바 토글 아이콘 완전 숨김 */
     [data-testid="collapsedControl"], button[kind="header"] {
         display: none !important;
     }
@@ -188,7 +188,7 @@ if not target_file:
     st.stop()
 
 # ==========================================
-# 사이드바 열기/닫기 상태 관리 세션 설정
+# 사이드바 열기/닫기 상태 관리 세션 설정 (기본값 True: 열림)
 # ==========================================
 if "sidebar_state" not in st.session_state:
     st.session_state.sidebar_state = True
