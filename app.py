@@ -10,7 +10,7 @@ import re
 from datetime import datetime
 
 # 1. 웹 페이지 기본 설정
-st.set_page_config(page_title="의료장비 투자집행 대시보드", layout="wide", initial_sidebar_state="expanded")
+st.set_page_config(page_title="의료장비 투자집행 계획 실적 대시보드", layout="wide", initial_sidebar_state="expanded")
 
 # Plotly 기본 폰트 설정 (Windows: 맑은 고딕, Mac: Apple Gothic)
 pio.templates.default = "plotly_white"
@@ -21,7 +21,7 @@ elif platform.system() == 'Darwin':
 else:
     font_family = "DejaVu Sans"
 
-# 모바일 기기 다크모드 무시 및 항상 라이트모드(밝은 테마) 고정 및 아이콘 글씨 깨짐 방지 CSS 주입
+# 모바일 기기 다크모드 무시 및 항상 라이트모드(밝은 테마) 고정 및 기본 화살표 글자 깨짐 버튼 강제 숨김 CSS 주입
 st.markdown("""
 <style>
     /* 브라우저/시스템 다크모드 강제 오버라이드 (항상 라이트 테마 유지) */
@@ -72,9 +72,9 @@ st.markdown("""
         accent-color: #E74C3C !important;
     }
 
-    /* 모바일에서 Material 아이콘이 깨져서 영문 텍스트로 노출되는 현상 방지 숨김 처리 */
-    button[kind="header"] p, [data-testid="collapsedControl"] p {
-        font-size: 0px !important;
+    /* 스트림릿 기본 상단 토글 버튼(영문 깨짐 현상 발생하는 화살표 버튼) 완전 숨김 처리 */
+    [data-testid="collapsedControl"], button[kind="header"] {
+        display: none !important;
     }
 
     /* 데이터프레임 셀 내부 텍스트 자동 줄바꿈 설정 */
@@ -112,7 +112,7 @@ st.markdown("""
         margin-bottom: 8px;
     }
 
-    /* 대시보드 리스트 열기 및 토글 버튼 스타일 공통화 */
+    /* 대시보드 리스트 열기 및 메뉴 토글 버튼 스타일 공통화 */
     div.stButton > button {
         background-color: #E74C3C !important;
         color: #FFFFFF !important;
@@ -202,13 +202,10 @@ if not st.session_state.sidebar_state:
             [data-testid="stSidebar"] {
                 display: none !important;
             }
-            [data-testid="collapsedControl"] {
-                display: none !important;
-            }
         </style>
     """, unsafe_allow_html=True)
 
-# 모바일 화면 반응형 타이틀 및 버튼 배치
+# 모바일 화면 반응형 타이틀 및 메뉴 토글 버튼 배치
 header_col1, header_col2 = st.columns([3.8, 1.2])
 
 with header_col1:
@@ -223,7 +220,7 @@ with header_col1:
 
 with header_col2:
     st.markdown("<div style='height: 2px;'></div>", unsafe_allow_html=True)
-    btn_label = "사이드바 닫기" if st.session_state.sidebar_state else "사이드바 열기"
+    btn_label = "메뉴 닫기" if st.session_state.sidebar_state else "메뉴 열기"
     if st.button(btn_label, key="sidebar_toggle_btn", use_container_width=True):
         toggle_sidebar()
         st.rerun()
