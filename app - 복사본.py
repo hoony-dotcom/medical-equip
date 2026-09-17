@@ -4,12 +4,8 @@ import pandas as pd
 import plotly.express as px
 import plotly.io as pio
 import platform
-import glob
-import os
-import re
-from datetime import datetime
 
-# 1. 웹 페이지 기본 설정
+# 1. 웹 페이지 기본 설정 (사이드바 초기 상태는 "auto" 또는 "expanded"로 시작)
 st.set_page_config(page_title="의료장비 투자집행 대시보드", layout="wide", initial_sidebar_state="expanded")
 
 # Plotly 기본 폰트 설정 (Windows: 맑은 고딕, Mac: Apple Gothic)
@@ -21,7 +17,7 @@ elif platform.system() == 'Darwin':
 else:
     font_family = "DejaVu Sans"
 
-# 모바일 기기 다크모드 무시 및 항상 라이트모드(밝은 테마) 고정 및 반응형 CSS 주입
+# 모바일 기기 다크모드 무시 및 항상 라이트모드(밝은 테마) 고정 CSS 주입
 st.markdown("""
 <style>
     /* 브라우저/시스템 다크모드 강제 오버라이드 (항상 라이트 테마 유지) */
@@ -107,11 +103,11 @@ st.markdown("""
         margin-bottom: 8px;
     }
 
-    /* 대시보드 리스트 열기 및 토글 버튼 스타일 공통화 */
+    /* '해당 리스트 열기' 버튼 스타일 */
     div.stButton > button {
         background-color: #E74C3C !important;
         color: #FFFFFF !important;
-        font-size: 1.2rem !important;
+        font-size: 1.4rem !important;
         font-weight: bold !important;
         padding: 0.5rem 1rem !important;
         border-radius: 8px !important;
@@ -123,74 +119,22 @@ st.markdown("""
         background-color: #C0392B !important;
         color: #FFFFFF !important;
     }
-
-    /* 모바일 환경에서 타이틀 크기 최적화 */
-    @media (max-width: 768px) {
-        h1 {
-            font-size: 1.5rem !important;
-        }
-    }
 </style>
 """, unsafe_allow_html=True)
-
-# ==========================================
-# 2. 'dashboard_'로 시작하는 파일 중 최신 날짜(6자리) 파일 자동 탐색 함수
-# ==========================================
-def find_latest_dashboard_file():
-    pattern = "dashboard_*.xlsx"
-    files = glob.glob(pattern)
-    files.extend(glob.glob("dashboard_*.xls"))
-    files.extend(glob.glob("dashboard_*.xlsm"))
-    
-    if not files:
-        if os.path.exists("dashboard.xlsx"):
-            return "dashboard.xlsx", "2026.09.15"
-        return None, None
-
-    valid_files = []
-    for f in files:
-        filename = os.path.basename(f)
-        match = re.search(r'dashboard_(\d{6,8})', filename)
-        if match:
-            date_str = match.group(1)
-            valid_files.append((f, date_str))
-
-    if not valid_files:
-        return files[0], "2026.09.15"
-
-    valid_files.sort(key=lambda x: x[1])
-    latest_file, latest_date_str = valid_files[-1]
-
-    if len(latest_date_str) == 6:
-        yy = latest_date_str[:2]
-        mm = latest_date_str[2:4]
-        dd = latest_date_str[4:]
-        formatted_date = f"20{yy}. {mm}. {dd}."
-    elif len(latest_date_str) == 8:
-        yyyy = latest_date_str[:4]
-        mm = latest_date_str[4:6]
-        dd = latest_date_str[6:]
-        formatted_date = f"{yyyy}. {mm}. {dd}."
-    else:
-        formatted_date = latest_date_str
-
-    return latest_file, formatted_date
-
-target_file, criteria_date = find_latest_dashboard_file()
-
-if not target_file:
-    st.error("⚠️ 'dashboard_'로 시작하는 엑셀 파일을 찾을 수 없습니다. 파일명을 확인해 주세요.")
-    st.stop()
 
 # ==========================================
 # 사이드바 열기/닫기 상태 관리 세션 설정
 # ==========================================
 if "sidebar_state" not in st.session_state:
-    st.session_state.sidebar_state = True
+    st.session_state.sidebar_state = True  # 기본적으로 열린 상태
 
 def toggle_sidebar():
     st.session_state.sidebar_state = not st.session_state.sidebar_state
 
+# Streamlit 최신 기능으로 사이드바 상태 제어 (여백 없이 깔끔하게 숨김/표시 제어)
+st.set_option("client.showSidebarNavigation", False) # 내부 내비게이션 옵션 무관하게 작동하도록 설정
+
+# CSS를 통한 사이드바 강제 숨김/표시 처리
 if not st.session_state.sidebar_state:
     st.markdown("""
         <style>
@@ -203,38 +147,36 @@ if not st.session_state.sidebar_state:
         </style>
     """, unsafe_allow_html=True)
 
-# 모바일 화면 깨짐 방지를 위한 반응형 컬럼 비율 적용 (PC에서는 넓게, 모바일에서는 위아래 배치 유도)
-header_col1, header_col2 = st.columns([4, 1.5])
+# 메인 타이틀 배치 및 사이드바 토글 버튼 배치 영역
+header_col1, header_col2 = st.columns([5, 1])
 
 with header_col1:
     st.markdown(
         """
         <div style="padding-top: 0.2rem;">
-            <h1 style="margin: 0; padding: 0; font-size: 1.8rem; display: inline-block;">📊 의료장비 투자집행 계획 실적 대시보드</h1>
+            <h1 style="margin: 0; padding: 0; font-size: 2rem; display: inline-block;">📊 의료장비 투자집행 계획 실적 대시보드</h1>
         </div>
         """,
         unsafe_allow_html=True
     )
 
 with header_col2:
-    st.markdown("<div style='height: 2px;'></div>", unsafe_allow_html=True)
+    st.markdown("<div style='height: 10px;'></div>", unsafe_allow_html=True) # 상단 여백 맞춤
     btn_label = "사이드바 닫기" if st.session_state.sidebar_state else "사이드바 열기"
     if st.button(btn_label, key="sidebar_toggle_btn", use_container_width=True):
         toggle_sidebar()
         st.rerun()
 
 st.markdown(
-    f"**기준일:** {criteria_date} (단위: 천원) | 2025, 2026학년도<br>"
+    "**기준일:** 2026. 09. 15. (단위: 천원) | 2025, 2026학년도<br>"
     "계약금액 \"Hidden\"으로 표시합니다. (대외비)",
     unsafe_allow_html=True
 )
 
-# 3. 엑셀 데이터 불러오기 및 안전한 전처리
+# 2. 엑셀 데이터 불러오기 및 안전한 전처리 (승인금액/계약금액 천원 단위 변환 적용)
 @st.cache_data(ttl=60)
-def load_data(file_path):
-    xl = pd.ExcelFile(file_path)
-    sheet_name = 'Dashboard용' if 'Dashboard용' in xl.sheet_names else xl.sheet_names[0]
-    df = pd.read_excel(file_path, sheet_name=sheet_name, header=1)
+def load_data():
+    df = pd.read_excel("dashboard.xlsx", sheet_name='Dashboard용', header=1)
     df.columns = [str(c).strip() for c in df.columns]
     
     for col in ['승인금액', '계약금액']:
@@ -250,10 +192,10 @@ def load_data(file_path):
         
     return df
 
-df = load_data(target_file)
+df = load_data()
 
 # ==========================================
-# 4. 순번 앞 2자리 기준 년도 추출 및 필터링 적용 (사이드바 구성)
+# 3. 순번 앞 2자리 기준 년도 추출 및 필터링 적용 (사이드바 구성)
 # ==========================================
 def extract_year_prefix(val):
     if pd.isna(val):
@@ -271,14 +213,10 @@ if seq_col_real:
 else:
     df['_년도_prefix'] = None
 
-# 사이드바 상단에 분석 중인 엑셀 파일명 및 제작/문의 정보 배치
-file_display_name = os.path.basename(target_file)
+# 사이드바 상단에 제작 및 문의 및 관련 앱 링크 배치
 st.sidebar.markdown(
-    f"""
+    """
     <div style="background-color: #FFFFFF; padding: 12px; border-radius: 6px; border: 1px solid #E5E7EB; margin-bottom: 15px;">
-        <span style="font-size: 0.95rem; font-weight: bold; color: #111111;">📂 분석 중인 엑셀 파일</span><br>
-        <span style="font-size: 0.85rem; color: #E74C3C; font-weight: bold; word-break: break-all;">{file_display_name}</span>
-        <hr style="margin: 8px 0; border: none; border-top: 1px solid #E5E7EB;">
         <span style="font-size: 0.95rem; font-weight: bold; color: #111111;">🛠️ 제작 및 문의</span><br>
         <span style="font-size: 0.9rem; color: #333333;">인하대병원 의용공학팀</span><br>
         <a href="mailto:dhkoh@inhauh.com" style="font-size: 0.9rem; color: #2980B9; text-decoration: none;">dhkoh@inhauh.com</a>
@@ -350,7 +288,7 @@ else:
 total_original_count = len(filtered_df_by_year)
 
 # ==========================================
-# 5. 세부 데이터 팝업(새 창) 정의 함수
+# 4. 세부 데이터 팝업(새 창) 정의 함수
 # ==========================================
 @st.dialog("📋 세부 데이터 새창 보기", width="large")
 def show_detail_dialog(target_df, status_name):
@@ -395,7 +333,7 @@ def show_detail_dialog(target_df, status_name):
         st.warning("선택하신 조건에 해당하는 데이터가 없습니다.")
 
 # ==========================================
-# 6. 핵심 요약 지표 및 버튼 레이아웃
+# 5. 핵심 요약 지표 및 버튼 레이아웃
 # ==========================================
 st.markdown("---")
 st.subheader(f"📈 요약 지표 ({selected_status})")
@@ -428,7 +366,7 @@ if st.button("해당 리스트 열기 ↗", key="open_popup_btn", use_container_
 st.markdown("---")
 
 # ==========================================
-# 7. 차트 시각화 영역
+# 6. 차트 시각화 영역
 # ==========================================
 custom_order = ['완료', '진행중(발주완료)', '진행중', '진행예정', '검토필요', '보류', ' 취소', '취소']
 color_map = {
@@ -527,7 +465,7 @@ with chart_col3:
         st.info("데이터가 없습니다.")
 
 # ==========================================
-# 8. 세부 데이터 표 (하단 기본 노출 영역)
+# 7. 세부 데이터 표 (하단 기본 노출 영역)
 # ==========================================
 st.markdown("---")
 st.subheader(f"📋 세부 데이터 ({selected_status})")
