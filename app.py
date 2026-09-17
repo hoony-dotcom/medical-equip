@@ -9,7 +9,7 @@ import os
 import re
 from datetime import datetime
 
-# 1. 웹 페이지 기본 설정 (사이드바 기본 열림 상태 유지)
+# 1. 웹 페이지 기본 설정 (사이드바 기본 열림 상태 설정)
 st.set_page_config(page_title="의료장비 투자집행 계획 실적 대시보드", layout="wide", initial_sidebar_state="expanded")
 
 # Plotly 기본 폰트 설정 (Windows: 맑은 고딕, Mac: Apple Gothic)
@@ -21,7 +21,7 @@ elif platform.system() == 'Darwin':
 else:
     font_family = "DejaVu Sans"
 
-# 모바일 기기 다크모드 무시 및 항상 라이트모드(밝은 테마) 고정 및 깨지는 기본 토글 버튼 완전 숨김 CSS 주입
+# 모바일 기기 다크모드 무시 및 항상 라이트모드(밝은 테마) 고정 CSS 주입
 st.markdown("""
 <style>
     /* 브라우저/시스템 다크모드 강제 오버라이드 (항상 라이트 테마 유지) */
@@ -72,11 +72,6 @@ st.markdown("""
         accent-color: #E74C3C !important;
     }
 
-    /* ⚠️ 모바일/다크모드에서 글자로 깨지는 스트림릿 기본 사이드바 토글 아이콘 완전 숨김 */
-    [data-testid="collapsedControl"], button[kind="header"] {
-        display: none !important;
-    }
-
     /* 데이터프레임 셀 내부 텍스트 자동 줄바꿈 설정 */
     [data-testid="stDataFrame"] div[data-testid="stTable"] td,
     [data-testid="stDataFrame"] table div,
@@ -112,7 +107,7 @@ st.markdown("""
         margin-bottom: 8px;
     }
 
-    /* 대시보드 리스트 열기 및 메뉴 토글 버튼 스타일 공통화 */
+    /* '해당 리스트 열기' 버튼 스타일 */
     div.stButton > button {
         background-color: #E74C3C !important;
         color: #FFFFFF !important;
@@ -187,43 +182,15 @@ if not target_file:
     st.error("⚠️ 'dashboard_'로 시작하는 엑셀 파일을 찾을 수 없습니다. 파일명을 확인해 주세요.")
     st.stop()
 
-# ==========================================
-# 사이드바 열기/닫기 상태 관리 세션 설정 (기본값 True: 열림)
-# ==========================================
-if "sidebar_state" not in st.session_state:
-    st.session_state.sidebar_state = True
-
-def toggle_sidebar():
-    st.session_state.sidebar_state = not st.session_state.sidebar_state
-
-if not st.session_state.sidebar_state:
-    st.markdown("""
-        <style>
-            [data-testid="stSidebar"] {
-                display: none !important;
-            }
-        </style>
-    """, unsafe_allow_html=True)
-
-# 모바일 화면 반응형 타이틀 및 메뉴 토글 버튼 배치
-header_col1, header_col2 = st.columns([3.8, 1.2])
-
-with header_col1:
-    st.markdown(
-        """
-        <div style="padding-top: 0.2rem;">
-            <h1 style="margin: 0; padding: 0; font-size: 1.7rem; display: inline-block;">📊 의료장비 투자집행 계획 실적 대시보드</h1>
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
-
-with header_col2:
-    st.markdown("<div style='height: 2px;'></div>", unsafe_allow_html=True)
-    btn_label = "메뉴 닫기" if st.session_state.sidebar_state else "메뉴 열기"
-    if st.button(btn_label, key="sidebar_toggle_btn", use_container_width=True):
-        toggle_sidebar()
-        st.rerun()
+# 메인 타이틀 배치 영역
+st.markdown(
+    """
+    <div style="padding-top: 0.2rem;">
+        <h1 style="margin: 0; padding: 0; font-size: 2rem; display: inline-block;">📊 의료장비 투자집행 계획 실적 대시보드</h1>
+    </div>
+    """,
+    unsafe_allow_html=True
+)
 
 st.markdown(
     f"**기준일:** {criteria_date} (단위: 천원) | 2025, 2026학년도<br>"
@@ -430,7 +397,7 @@ if st.button("해당 리스트 열기 ↗", key="open_popup_btn", use_container_
 st.markdown("---")
 
 # ==========================================
-# 7. 차트 시각화 영역
+# 7. 차트 시각화 영역 (데이터 값 잘림 방지 넉넉한 X축 여백 적용)
 # ==========================================
 custom_order = ['완료', '진행중(발주완료)', '진행중', '진행예정', '검토필요', '보류', ' 취소', '취소']
 color_map = {
@@ -466,10 +433,10 @@ with chart_col1:
         max_val = status_counts['건수'].max() if len(status_counts) > 0 else 10
         fig_status_count.update_layout(
             yaxis={'categoryorder': 'array', 'categoryarray': status_counts['진행상태'][::-1]},
-            xaxis={'range': [0, max_val * 1.25]},
+            xaxis={'range': [0, max_val * 1.5], 'autorange': False},
             showlegend=False,
             font=dict(size=14, family=font_family),
-            margin=dict(l=10, r=10, t=10, b=10)
+            margin=dict(l=10, r=30, t=10, b=10)
         )
         fig_status_count.update_traces(textposition='outside', textfont_size=14)
         st.plotly_chart(fig_status_count, use_container_width=True, config={'staticPlot': True})
@@ -492,10 +459,10 @@ with chart_col2:
         max_amt = status_amounts['승인금액합계'].max() if len(status_amounts) > 0 else 10
         fig_status_amount.update_layout(
             yaxis={'categoryorder': 'array', 'categoryarray': status_amounts['진행상태'][::-1]},
-            xaxis={'range': [0, max_amt * 1.3]},
+            xaxis={'range': [0, max_amt * 1.5], 'autorange': False},
             showlegend=False,
             font=dict(size=14, family=font_family),
-            margin=dict(l=10, r=10, t=10, b=10)
+            margin=dict(l=10, r=40, t=10, b=10)
         )
         fig_status_amount.update_traces(textposition='outside', textfont_size=14)
         st.plotly_chart(fig_status_amount, use_container_width=True, config={'staticPlot': True})
@@ -519,9 +486,9 @@ with chart_col3:
         max_dept = dept_amounts['승인금액'].max() if len(dept_amounts) > 0 else 10
         fig_dept.update_layout(
             yaxis={'categoryorder': 'total ascending'},
-            xaxis={'range': [0, max_dept * 1.3]},
+            xaxis={'range': [0, max_dept * 1.5], 'autorange': False},
             font=dict(size=14, family=font_family),
-            margin=dict(l=10, r=10, t=10, b=10)
+            margin=dict(l=10, r=40, t=10, b=10)
         )
         fig_dept.update_traces(textposition='outside', textfont_size=14)
         st.plotly_chart(fig_dept, use_container_width=True, config={'staticPlot': True})
