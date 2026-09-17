@@ -397,7 +397,7 @@ if st.button("해당 리스트 열기 ↗", key="open_popup_btn", use_container_
 st.markdown("---")
 
 # ==========================================
-# 7. 차트 시각화 영역 (데이터 값 잘림 방지 넉넉한 X축 여백 적용)
+# 7. 차트 시각화 영역 (텍스트 잘림 방지를 위한 X축 범위 및 여백 최적화)
 # ==========================================
 custom_order = ['완료', '진행중(발주완료)', '진행중', '진행예정', '검토필요', '보류', ' 취소', '취소']
 color_map = {
@@ -433,12 +433,13 @@ with chart_col1:
         max_val = status_counts['건수'].max() if len(status_counts) > 0 else 10
         fig_status_count.update_layout(
             yaxis={'categoryorder': 'array', 'categoryarray': status_counts['진행상태'][::-1]},
-            xaxis={'range': [0, max_val * 1.5], 'autorange': False},
+            xaxis={'range': [0, max_val * 1.6], 'autorange': False},  # X축 공간 60% 확장
             showlegend=False,
-            font=dict(size=14, family=font_family),
-            margin=dict(l=10, r=30, t=10, b=10)
+            font=dict(size=13, family=font_family),
+            margin=dict(l=10, r=40, t=10, b=10),
+            height=380  # 고정 높이 부여로 찌그러짐 방지
         )
-        fig_status_count.update_traces(textposition='outside', textfont_size=14)
+        fig_status_count.update_traces(textposition='outside', textfont_size=13)
         st.plotly_chart(fig_status_count, use_container_width=True, config={'staticPlot': True})
     else:
         st.info("데이터가 없습니다.")
@@ -459,12 +460,13 @@ with chart_col2:
         max_amt = status_amounts['승인금액합계'].max() if len(status_amounts) > 0 else 10
         fig_status_amount.update_layout(
             yaxis={'categoryorder': 'array', 'categoryarray': status_amounts['진행상태'][::-1]},
-            xaxis={'range': [0, max_amt * 1.5], 'autorange': False},
+            xaxis={'range': [0, max_amt * 1.8], 'autorange': False},  # 긴 금액 텍스트가 잘리지 않도록 80% 여유 확보
             showlegend=False,
-            font=dict(size=14, family=font_family),
-            margin=dict(l=10, r=40, t=10, b=10)
+            font=dict(size=13, family=font_family),
+            margin=dict(l=10, r=70, t=10, b=10),  # 우측 마진을 넓혀 텍스트 잘림 원천 차단
+            height=380
         )
-        fig_status_amount.update_traces(textposition='outside', textfont_size=14)
+        fig_status_amount.update_traces(textposition='outside', textfont_size=13)
         st.plotly_chart(fig_status_amount, use_container_width=True, config={'staticPlot': True})
     else:
         st.info("데이터가 없습니다.")
@@ -486,11 +488,12 @@ with chart_col3:
         max_dept = dept_amounts['승인금액'].max() if len(dept_amounts) > 0 else 10
         fig_dept.update_layout(
             yaxis={'categoryorder': 'total ascending'},
-            xaxis={'range': [0, max_dept * 1.5], 'autorange': False},
-            font=dict(size=14, family=font_family),
-            margin=dict(l=10, r=40, t=10, b=10)
+            xaxis={'range': [0, max_dept * 1.8], 'autorange': False},  # X축 범위 충분히 확보
+            font=dict(size=13, family=font_family),
+            margin=dict(l=10, r=70, t=10, b=10),  # 우측 마진 확보
+            height=420
         )
-        fig_dept.update_traces(textposition='outside', textfont_size=14)
+        fig_dept.update_traces(textposition='outside', textfont_size=13)
         st.plotly_chart(fig_dept, use_container_width=True, config={'staticPlot': True})
     else:
         st.info("데이터가 없습니다.")
