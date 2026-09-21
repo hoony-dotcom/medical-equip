@@ -240,7 +240,7 @@ if seq_col_real:
 else:
     df['_년도_prefix'] = None
 
-# 사이드바 상단에 분석 중인 엑셀 파일명 및 제작/문의 정보 배치
+# 사이드바 상단에 분석 중인 엑셀 파일명 및 제작/문의 정보 배치 (심평원 신고 장비 링크 추가)
 file_display_name = os.path.basename(target_file)
 st.sidebar.markdown(
     f"""
@@ -255,7 +255,8 @@ st.sidebar.markdown(
         <span style="font-size: 0.95rem; font-weight: bold; color: #111111;">🔗 의용공학팀 개발 앱</span><br>
         <div style="margin-top: 5px; font-size: 0.88rem; line-height: 1.4;">
             1. <a href="https://buly.kr/DEbvdwF" target="_blank" style="color: #2980B9; text-decoration: none;">의료장비 투자집행 계획 실적</a><br>
-            2. <a href="https://buly.kr/7mERs3u" target="_blank" style="color: #2980B9; text-decoration: none;">의료장비 현황 바로가기</a>
+            2. <a href="https://buly.kr/7mERs3u" target="_blank" style="color: #2980B9; text-decoration: none;">의료장비 현황 바로가기</a><br>
+            3. <a href="https://buly.kr/uWvRbg" target="_blank" style="color: #2980B9; text-decoration: none;">심평원 신고 장비 상세현황</a>
         </div>
     </div>
     """,
