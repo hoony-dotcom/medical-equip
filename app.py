@@ -134,23 +134,26 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ==========================================
-# 2. 'dashboard_'로 시작하는 파일 중 최신 날짜(6자리) 파일 자동 탐색 함수
+# 2. 대소문자 무관하게 'dashboard_'로 시작하는 파일 자동 탐색 함수
 # ==========================================
 def find_latest_dashboard_file():
-    pattern = "dashboard_*.xlsx"
-    files = glob.glob(pattern)
-    files.extend(glob.glob("dashboard_*.xls"))
-    files.extend(glob.glob("dashboard_*.xlsm"))
+    all_files = glob.glob("*.*")
+    files = []
+    for f in all_files:
+        lower_name = f.lower()
+        if lower_name.startswith("dashboard_") and lower_name.endswith(('.xlsx', '.xls', '.xlsm')):
+            files.append(f)
     
     if not files:
-        if os.path.exists("dashboard.xlsx"):
-            return "dashboard.xlsx", "2026.09.15"
+        for f in all_files:
+            if f.lower() == "dashboard.xlsx":
+                return f, "2026.09.15"
         return None, None
 
     valid_files = []
     for f in files:
         filename = os.path.basename(f)
-        match = re.search(r'dashboard_(\d{6,8})', filename)
+        match = re.search(r'dashboard_(\d{6,8})', filename, re.IGNORECASE)
         if match:
             date_str = match.group(1)
             valid_files.append((f, date_str))
@@ -240,7 +243,7 @@ if seq_col_real:
 else:
     df['_년도_prefix'] = None
 
-# 사이드바 상단에 분석 중인 엑셀 파일명 및 제작/문의 정보 배치 (심평원 신고 장비 링크 추가)
+# 사이드바 상단에 분석 중인 엑셀 파일명 및 제작/문의 정보 배치 (심평원 신고 장비 링크 포함)
 file_display_name = os.path.basename(target_file)
 st.sidebar.markdown(
     f"""
@@ -434,11 +437,11 @@ with chart_col1:
         max_val = status_counts['건수'].max() if len(status_counts) > 0 else 10
         fig_status_count.update_layout(
             yaxis={'categoryorder': 'array', 'categoryarray': status_counts['진행상태'][::-1]},
-            xaxis={'range': [0, max_val * 1.6], 'autorange': False},  # X축 공간 60% 확장
+            xaxis={'range': [0, max_val * 1.6], 'autorange': False},
             showlegend=False,
             font=dict(size=13, family=font_family),
             margin=dict(l=10, r=40, t=10, b=10),
-            height=380  # 고정 높이 부여로 찌그러짐 방지
+            height=380
         )
         fig_status_count.update_traces(textposition='outside', textfont_size=13)
         st.plotly_chart(fig_status_count, use_container_width=True, config={'staticPlot': True})
@@ -461,10 +464,10 @@ with chart_col2:
         max_amt = status_amounts['승인금액합계'].max() if len(status_amounts) > 0 else 10
         fig_status_amount.update_layout(
             yaxis={'categoryorder': 'array', 'categoryarray': status_amounts['진행상태'][::-1]},
-            xaxis={'range': [0, max_amt * 1.8], 'autorange': False},  # 긴 금액 텍스트가 잘리지 않도록 80% 여유 확보
+            xaxis={'range': [0, max_amt * 1.8], 'autorange': False},
             showlegend=False,
             font=dict(size=13, family=font_family),
-            margin=dict(l=10, r=70, t=10, b=10),  # 우측 마진을 넓혀 텍스트 잘림 원천 차단
+            margin=dict(l=10, r=70, t=10, b=10),
             height=380
         )
         fig_status_amount.update_traces(textposition='outside', textfont_size=13)
@@ -489,9 +492,9 @@ with chart_col3:
         max_dept = dept_amounts['승인금액'].max() if len(dept_amounts) > 0 else 10
         fig_dept.update_layout(
             yaxis={'categoryorder': 'total ascending'},
-            xaxis={'range': [0, max_dept * 1.8], 'autorange': False},  # X축 범위 충분히 확보
+            xaxis={'range': [0, max_dept * 1.8], 'autorange': False},
             font=dict(size=13, family=font_family),
-            margin=dict(l=10, r=70, t=10, b=10),  # 우측 마진 확보
+            margin=dict(l=10, r=70, t=10, b=10),
             height=420
         )
         fig_dept.update_traces(textposition='outside', textfont_size=13)
