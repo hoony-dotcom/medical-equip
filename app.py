@@ -256,10 +256,12 @@ st.sidebar.markdown(
         <a href="mailto:dhkoh@inhauh.com" style="font-size: 0.9rem; color: #2980B9; text-decoration: none;">dhkoh@inhauh.com</a>
         <hr style="margin: 8px 0; border: none; border-top: 1px solid #E5E7EB;">
         <span style="font-size: 0.95rem; font-weight: bold; color: #111111;">🔗 의용공학팀 개발 앱</span><br>
-        <div style="margin-top: 5px; font-size: 0.88rem; line-height: 1.4;">
+        <div style="margin-top: 5px; font-size: 0.85rem; line-height: 1.4;">
             1. <a href="https://buly.kr/DEbvdwF" target="_blank" style="color: #2980B9; text-decoration: none;">의료장비 투자집행 계획 실적</a><br>
             2. <a href="https://buly.kr/7mERs3u" target="_blank" style="color: #2980B9; text-decoration: none;">인하대병원 의료장비 보유 현황</a><br>
-            3. <a href="https://buly.kr/uWvRbg" target="_blank" style="color: #2980B9; text-decoration: none;">건강보험심사평가원 의료장비 상세현황 조회</a>
+            3. <a href="http://buly.kr/uWvRbg" target="_blank" style="color: #2980B9; text-decoration: none;">건강보험심사평가원 의료장비 상세현황 조회</a><br>
+            4. <a href="https://buly.kr/6BzfJgY" target="_blank" style="color: #2980B9; text-decoration: none;">인하대병원 의료장비 조회 시스템</a><br>
+            5. <a href="https://buly.kr/2Jr1qXA" target="_blank" style="color: #2980B9; text-decoration: none;">의료기기 백업 현황 대시보드</a>
         </div>
     </div>
     """,
