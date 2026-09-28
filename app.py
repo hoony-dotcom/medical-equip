@@ -243,7 +243,7 @@ if seq_col_real:
 else:
     df['_년도_prefix'] = None
 
-# 사이드바 상단에 분석 중인 엑셀 파일명 및 제작/문의 정보 배치 (심평원 신고 장비 링크 포함)
+# 사이드바 상단에 분석 중인 엑셀 파일명 및 제작/문의 정보 배치 (개발 앱 링크 포함)
 file_display_name = os.path.basename(target_file)
 st.sidebar.markdown(
     f"""
@@ -252,14 +252,14 @@ st.sidebar.markdown(
         <span style="font-size: 0.85rem; color: #E74C3C; font-weight: bold; word-break: break-all;">{file_display_name}</span>
         <hr style="margin: 8px 0; border: none; border-top: 1px solid #E5E7EB;">
         <span style="font-size: 0.95rem; font-weight: bold; color: #111111;">🛠️ 제작 및 문의</span><br>
-        <span style="font-size: 0.9rem; color: #333333;">인하대병원 의용공학팀</span><br>
-        <a href="mailto:dhkoh@inhauh.com" style="font-size: 0.9rem; color: #2980B9; text-decoration: none;">dhkoh@inhauh.com</a>
+        <span style="font-size: 0.9rem; color: #333333;">인하대병원 의용공학팀[cite: 2]</span><br>
+        <a href="mailto:dhkoh@inhauh.com" style="font-size: 0.9rem; color: #2980B9; text-decoration: none;">dhkoh@inhauh.com[cite: 2]</a>
         <hr style="margin: 8px 0; border: none; border-top: 1px solid #E5E7EB;">
         <span style="font-size: 0.95rem; font-weight: bold; color: #111111;">🔗 의용공학팀 개발 앱</span><br>
         <div style="margin-top: 5px; font-size: 0.85rem; line-height: 1.4;">
-            1. <a href="https://buly.kr/DEbvdwF" target="_blank" style="color: #2980B9; text-decoration: none;">의료장비 투자집행 계획 실적</a><br>
-            2. <a href="https://buly.kr/7mERs3u" target="_blank" style="color: #2980B9; text-decoration: none;">인하대병원 의료장비 보유 현황</a><br>
-            3. <a href="http://buly.kr/uWvRbg" target="_blank" style="color: #2980B9; text-decoration: none;">건강보험심사평가원 의료장비 상세현황 조회</a><br>
+            1. <a href="https://buly.kr/DEbvdwF" target="_blank" style="color: #2980B9; text-decoration: none;">의료장비 투자집행 계획 실적</a>[cite: 2]<br>
+            2. <a href="https://buly.kr/7mERs3u" target="_blank" style="color: #2980B9; text-decoration: none;">인하대병원 의료장비 보유 현황</a>[cite: 2]<br>
+            3. <a href="https://buly.kr/uWvRbg" target="_blank" style="color: #2980B9; text-decoration: none;">건강보험심사평가원 의료장비 상세현황 조회</a>[cite: 2]<br>
             4. <a href="https://buly.kr/6BzfJgY" target="_blank" style="color: #2980B9; text-decoration: none;">인하대병원 의료장비 조회 시스템</a><br>
             5. <a href="https://buly.kr/2Jr1qXA" target="_blank" style="color: #2980B9; text-decoration: none;">의료기기 백업 현황 대시보드</a>
         </div>
