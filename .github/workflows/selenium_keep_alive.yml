@@ -1,0 +1,28 @@
+name: Multiple Streamlit Keep Alive
+
+on:
+  schedule:
+    # 매일 3시간마다 실행 (UTC 기준, 한국 시간과는 시차 고려)
+    - cron: '0 */3 * * *'
+  workflow_dispatch: # 수동 테스트용 버튼 활성화
+
+jobs:
+  run-selenium-batch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        uses: py-actions/pip-dependency-install@v4
+        with:
+          sub: "selenium"
+
+      - name: Run Keep-Alive Script
+        run: |
+          python keep_alive.py
