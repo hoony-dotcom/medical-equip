@@ -1,0 +1,28 @@
+name: Multiple Streamlit Keep Alive
+
+on:
+  schedule:
+    - cron: '0 */3 * * *'  # 3시간마다 실행
+  workflow_dispatch:        # 수동 실행 버튼 활성화
+
+jobs:
+  run-selenium-batch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      # 💡 수정된 부분: 외부 액션 대신 표준 pip 명령어로 설치
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install selenium
+
+      - name: Run Keep-Alive Script
+        run: |
+          python keep_alive.py
