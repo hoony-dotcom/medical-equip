@@ -25,8 +25,8 @@ def wake_up_apps():
             try:
                 print(f"접속 시도 중: {url}")
                 driver.get(url)
-                # 각 앱이 완전히 로드되고 소켓이 맺어지도록 5초 대기
-                time.sleep(5)
+                # 각 앱이 완전히 로드되고 소켓이 맺어지도록 60초 대기
+                time.sleep(60)
                 print(f"성공적으로 활성화됨: {url}")
             except Exception as e:
                 print(f"앱 접속 실패 ({url}): {e}")
