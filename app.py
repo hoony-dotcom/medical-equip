@@ -196,7 +196,7 @@ st.markdown(
 )
 
 st.markdown(
-    f"**기준일:** {criteria_date} (단위: 천원) | 2025, 2026학년도<br>"
+    f"**기준일:** {criteria_date} (단위: 천원)<br>"
     "계약금액 \"Hidden\"으로 표시합니다. (대외비)",
     unsafe_allow_html=True
 )
@@ -225,19 +225,29 @@ def load_data(file_path):
 df = load_data(target_file)
 
 # ==========================================
-# 4. 순번 앞 2자리 기준 년도 추출 및 필터링 적용 (사이드바 구성)
+# 4. 정확한 '순번' 컬럼 기준 앞 2자리 연도 추출 및 필터링 적용 (사이드바 구성)
 # ==========================================
 def extract_year_prefix(val):
     if pd.isna(val):
         return None
     s = str(val).strip()
+    # 만약 소수점이 있다면 제거
     if '.' in s:
         s = s.split('.')[0]
-    if len(s) >= 2:
+    # 순번 형태 (예: '25-1' -> 첫 두 글자 '25')
+    if len(s) >= 2 and s[:2].isdigit():
         return s[:2]
     return None
 
-seq_col_real = next((c for c in df.columns if '순번' in str(c)), None)
+# 정확히 컬럼명이 '순번'이거나 '순번'을 포함하는 컬럼 탐색 (다른 컬럼 오인식 방지)
+seq_col_real = None
+for c in df.columns:
+    if str(c).strip() == '순번':
+        seq_col_real = c
+        break
+if not seq_col_real:
+    seq_col_real = next((c for c in df.columns if '순번' in str(c)), None)
+
 if seq_col_real:
     df['_년도_prefix'] = df[seq_col_real].apply(extract_year_prefix)
 else:
@@ -337,15 +347,13 @@ def show_detail_dialog(target_df, status_name):
         preferred_cols = ['순번', '투자구분', '진행상태', '신청부서', '의공담당', '의공담당자', '장비명', '승인금액', '계약금액', inv_col_real, '비고', '비고2']
         display_columns = [c for c in preferred_cols if c in target_df.columns and c != '_년도_prefix']
         
-        if seq_col_name := next((c for c in target_df.columns if '순번' in str(c)), None):
-            if seq_col_name not in display_columns:
-                display_columns.insert(0, seq_col_name)
+        if seq_col_real and seq_col_real not in display_columns:
+            display_columns.insert(0, seq_col_real)
 
         dlg_styled = target_df[display_columns].copy()
         
-        seq_c = next((c for c in dlg_styled.columns if '순번' in str(c)), None)
-        if seq_c:
-            dlg_styled[seq_c] = dlg_styled[seq_c].astype(str).str.replace('nan', '-')
+        if seq_col_real and seq_col_real in dlg_styled.columns:
+            dlg_styled[seq_col_real] = dlg_styled[seq_col_real].astype(str).str.replace('nan', '-')
 
         if '승인금액' in dlg_styled.columns:
             dlg_styled['승인금액'] = dlg_styled['승인금액'].apply(lambda x: "임차" if x == 0 else f"{x:,.0f}")
@@ -517,15 +525,13 @@ if len(filtered_df) > 0:
     preferred_cols = ['순번', '투자구분', '진행상태', '신청부서', '의공담당', '의공담당자', '장비명', '승인금액', '계약금액', inv_col_real, '비고', '비고2']
     display_columns = [c for c in preferred_cols if c in filtered_df.columns and c != '_년도_prefix']
     
-    if seq_col_name := next((c for c in filtered_df.columns if '순번' in str(c)), None):
-        if seq_col_name not in display_columns:
-            display_columns.insert(0, seq_col_name)
+    if seq_col_real and seq_col_real not in display_columns:
+        display_columns.insert(0, seq_col_real)
 
     df_styled = filtered_df[display_columns].copy()
     
-    seq_c = next((c for c in df_styled.columns if '순번' in str(c)), None)
-    if seq_c:
-        df_styled[seq_c] = df_styled[seq_c].astype(str).str.replace('nan', '-')
+    if seq_col_real and seq_col_real in df_styled.columns:
+        df_styled[seq_col_real] = df_styled[seq_col_real].astype(str).str.replace('nan', '-')
 
     if '승인금액' in df_styled.columns:
         df_styled['승인금액'] = df_styled['승인금액'].apply(lambda x: "임차" if x == 0 else f"{x:,.0f}")
