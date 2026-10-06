@@ -225,33 +225,31 @@ def load_data(file_path):
 df = load_data(target_file)
 
 # ==========================================
-# 4. 정확한 '순번' 컬럼 기준 앞 2자리 연도 추출 및 필터링 적용 (사이드바 구성)
+# 4. 연도 추출 및 학년도 필터링 적용 (순번 및 투자구분 복합 반영)
 # ==========================================
-def extract_year_prefix(val):
-    if pd.isna(val):
-        return None
-    s = str(val).strip()
-    # 만약 소수점이 있다면 제거
-    if '.' in s:
-        s = s.split('.')[0]
-    # 순번 형태 (예: '25-1' -> 첫 두 글자 '25')
-    if len(s) >= 2 and s[:2].isdigit():
-        return s[:2]
+def extract_year_prefix(row):
+    # 1순위: 투자구분에서 연도 추출 (예: '24년 1차' -> '24')
+    if '투자구분' in row and pd.notna(row['투자구분']):
+        s_inv = str(row['투자구분']).strip()
+        m = re.search(r'(?:20)?(\d{2})년', s_inv)
+        if m:
+            return m.group(1)
+            
+    # 2순위: 순번에서 앞 두자리 추출 (예: '25-1' -> '25')
+    for c in df.columns:
+        if '순번' in str(c):
+            val = row[c]
+            if pd.notna(val):
+                s_seq = str(val).strip()
+                if '.' in s_seq:
+                    s_seq = s_seq.split('.')[0]
+                if len(s_seq) >= 2 and s_seq[:2].isdigit():
+                    return s_seq[:2]
     return None
 
-# 정확히 컬럼명이 '순번'이거나 '순번'을 포함하는 컬럼 탐색 (다른 컬럼 오인식 방지)
-seq_col_real = None
-for c in df.columns:
-    if str(c).strip() == '순번':
-        seq_col_real = c
-        break
-if not seq_col_real:
-    seq_col_real = next((c for c in df.columns if '순번' in str(c)), None)
+df['_년도_prefix'] = df.apply(extract_year_prefix, axis=1)
 
-if seq_col_real:
-    df['_년도_prefix'] = df[seq_col_real].apply(extract_year_prefix)
-else:
-    df['_년도_prefix'] = None
+seq_col_real = next((c for c in df.columns if '순번' in str(c)), None)
 
 # 사이드바 상단에 분석 중인 엑셀 파일명 및 제작/문의 정보 배치 (개발 앱 링크 포함)
 file_display_name = os.path.basename(target_file)
@@ -287,15 +285,13 @@ available_years = sorted([y for y in df['_년도_prefix'].unique() if y is not N
 selected_years = []
 if available_years:
     st.sidebar.markdown("**📅 1차 필터: 학년도 선택**")
-    year_cols = st.sidebar.columns(len(available_years))
     
-    for idx, year_val in enumerate(available_years):
-        with year_cols[idx]:
-            # 순번 앞자리(예: '25')를 '2025학년도' 형태로 보기 좋게 변환
-            display_year_label = f"20{year_val}학년도" if len(year_val) == 2 and year_val.isdigit() else f"{year_val}학년도"
-            is_checked = st.sidebar.checkbox(display_year_label, value=True, key=f"chk_year_{year_val}")
-            if is_checked:
-                selected_years.append(year_val)
+    # 체크박스들을 세로로 깔끔하게 배치
+    for year_val in available_years:
+        display_year_label = f"20{year_val}학년도" if len(year_val) == 2 and year_val.isdigit() else f"{year_val}학년도"
+        is_checked = st.sidebar.checkbox(display_year_label, value=True, key=f"chk_year_{year_val}")
+        if is_checked:
+            selected_years.append(year_val)
                 
     # 년도 필터 적용
     if selected_years:
@@ -357,210 +353,4 @@ def show_detail_dialog(target_df, status_name):
 
         if '승인금액' in dlg_styled.columns:
             dlg_styled['승인금액'] = dlg_styled['승인금액'].apply(lambda x: "임차" if x == 0 else f"{x:,.0f}")
-        if '계약금액' in dlg_styled.columns:
-            dlg_styled['계약금액'] = dlg_styled['계약금액'].apply(lambda x: "hidden" if pd.notnull(x) and x >= 1 else (f"{x:,.0f}" if pd.notnull(x) else "0"))
-        if inv_col_real in dlg_styled.columns:
-            dlg_styled[inv_col_real] = dlg_styled[inv_col_real].astype(str).str.replace(' 00:00:00', '').replace('NaT', '-')
-
-        for text_col in ['투자구분', '의공담당', '의공담당자', '비고', '비고2']:
-            if text_col in dlg_styled.columns:
-                dlg_styled[text_col] = dlg_styled[text_col].apply(lambda x: "" if pd.isnull(x) or str(x).strip().lower() in ['nan', 'none', 'nat'] else str(x))
-
-        column_config = {}
-        for idx, col in enumerate(dlg_styled.columns, 1):
-            if idx in [1, 2, 3, 4, 5, 9]:
-                column_config[col] = st.column_config.TextColumn(col, width="auto", alignment="center")
-            elif idx in [7, 8]:
-                column_config[col] = st.column_config.TextColumn(col, width="auto", alignment="right")
-            else:
-                column_config[col] = st.column_config.TextColumn(col, width="auto")
-
-        st.dataframe(dlg_styled, use_container_width=True, hide_index=True, column_config=column_config)
-    else:
-        st.warning("선택하신 조건에 해당하는 데이터가 없습니다.")
-
-# ==========================================
-# 6. 핵심 요약 지표 및 버튼 레이아웃
-# ==========================================
-st.markdown("---")
-st.subheader(f"📈 요약 지표 ({selected_status})")
-
-total_approved = filtered_df['승인금액'].sum() if '승인금액' in filtered_df.columns else 0
-total_contract = filtered_df['계약금액'].sum() if '계약금액' in filtered_df.columns else 0
-filtered_count = len(filtered_df)
-
-execution_rate_amount = (total_contract / total_approved * 100) if total_approved > 0 else 0
-
-if selected_status == '전체':
-    rate_count_display = "-"
-else:
-    execution_rate_count = (filtered_count / total_original_count * 100) if total_original_count > 0 else 0
-    rate_count_display = f"{execution_rate_count:.1f}%"
-
-r1_c1, r1_c2, r1_c3 = st.columns(3)
-r1_c1.metric("💰 승인금액 합계", f"{total_approved:,.0f} 천원")
-r1_c2.metric("💳 계약금액 합계", f"{total_contract:,.0f} 천원")
-r1_c3.metric("📊 승인가 대비 계약가", f"{execution_rate_amount:.1f}%")
-
-r2_c1, r2_c2, r2_c3 = st.columns(3)
-r2_c1.metric("📝 건수 (조회 / 전체)", f"{filtered_count} 건 / {total_original_count} 건")
-r2_c2.metric("📈 집행비율(건수)", rate_count_display)
-
-st.markdown("")
-if st.button("해당 리스트 열기 ↗", key="open_popup_btn", use_container_width=True):
-    show_detail_dialog(filtered_df, selected_status)
-
-st.markdown("---")
-
-# ==========================================
-# 7. 차트 시각화 영역 (텍스트 잘림 방지를 위한 X축 범위 및 여백 최적화)
-# ==========================================
-custom_order = ['완료', '진행중(발주완료)', '진행중', '진행예정', '검토필요', '보류', ' 취소', '취소']
-color_map = {
-    '진행중': '#FFD700',
-    '진행예정': '#2ECC71',
-    '검토필요': '#9B59B6',
-    '보류': '#E74C3C',
-    '취소': '#C0392B',
-    ' 취소': '#C0392B',
-    '완료': '#3498DB',
-    '진행중(발주완료)': '#F39C12'
-}
-
-def sort_status_df(df_target):
-    df_target['sort_key'] = df_target['진행상태'].apply(
-        lambda x: custom_order.index(x) if x in custom_order else 999
-    )
-    return df_target.sort_values(by='sort_key').drop(columns=['sort_key'])
-
-chart_col1, chart_col2 = st.columns(2)
-
-with chart_col1:
-    st.subheader("📌 투자집행 진행상태 (건수 기준)")
-    if len(filtered_df_by_year) > 0 and '진행상태' in filtered_df_by_year.columns:
-        status_counts = filtered_df_by_year['진행상태'].value_counts().reset_index()
-        status_counts.columns = ['진행상태', '건수']
-        status_counts = sort_status_df(status_counts)
-        
-        fig_status_count = px.bar(
-            status_counts, x='건수', y='진행상태', orientation='h',
-            text='건수', color='진행상태', color_discrete_map=color_map
-        )
-        max_val = status_counts['건수'].max() if len(status_counts) > 0 else 10
-        fig_status_count.update_layout(
-            yaxis={'categoryorder': 'array', 'categoryarray': status_counts['진행상태'][::-1]},
-            xaxis={'range': [0, max_val * 1.6], 'autorange': False},
-            showlegend=False,
-            font=dict(size=13, family=font_family),
-            margin=dict(l=10, r=40, t=10, b=10),
-            height=380
-        )
-        fig_status_count.update_traces(textposition='outside', textfont_size=13)
-        st.plotly_chart(fig_status_count, use_container_width=True, config={'staticPlot': True})
-    else:
-        st.info("데이터가 없습니다.")
-
-with chart_col2:
-    st.subheader("💰 투자집행 진행상태 (승인금액 기준)")
-    if len(filtered_df_by_year) > 0 and '진행상태' in filtered_df_by_year.columns and '승인금액' in filtered_df_by_year.columns:
-        status_amounts = filtered_df_by_year.groupby('진행상태')['승인금액'].sum().reset_index()
-        status_amounts.columns = ['진행상태', '승인금액합계']
-        status_amounts = sort_status_df(status_amounts)
-        status_amounts['금액_표시'] = status_amounts['승인금액합계'].apply(lambda x: f"{x:,.0f} 천원")
-        
-        fig_status_amount = px.bar(
-            status_amounts, x='승인금액합계', y='진행상태', orientation='h',
-            text='금액_표시', color='진행상태', color_discrete_map=color_map,
-            hover_data={'승인금액합계': ':,.0f', '금액_표시': False}
-        )
-        max_amt = status_amounts['승인금액합계'].max() if len(status_amounts) > 0 else 10
-        fig_status_amount.update_layout(
-            yaxis={'categoryorder': 'array', 'categoryarray': status_amounts['진행상태'][::-1]},
-            xaxis={'range': [0, max_amt * 1.8], 'autorange': False},
-            showlegend=False,
-            font=dict(size=13, family=font_family),
-            margin=dict(l=10, r=70, t=10, b=10),
-            height=380
-        )
-        fig_status_amount.update_traces(textposition='outside', textfont_size=13)
-        st.plotly_chart(fig_status_amount, use_container_width=True, config={'staticPlot': True})
-    else:
-        st.info("데이터가 없습니다.")
-
-st.markdown("")
-chart_col3, _ = st.columns(2)
-
-with chart_col3:
-    st.subheader("🏢 신청부서별 승인금액 Top 10")
-    if len(filtered_df_by_year) > 0 and '신청부서' in filtered_df_by_year.columns and '승인금액' in filtered_df_by_year.columns:
-        dept_amounts = filtered_df_by_year.groupby('신청부서')['승인금액'].sum().reset_index()
-        dept_amounts = dept_amounts.sort_values('승인금액', ascending=False).head(10)
-        dept_amounts['승인금액_표시'] = dept_amounts['승인금액'].apply(lambda x: f"{x:,.0f} 천원")
-        
-        fig_dept = px.bar(
-            dept_amounts, x='승인금액', y='신청부서', orientation='h',
-            text='승인금액_표시', hover_data={'승인금액': ':,', '승인금액_표시': False}
-        )
-        max_dept = dept_amounts['승인금액'].max() if len(dept_amounts) > 0 else 10
-        fig_dept.update_layout(
-            yaxis={'categoryorder': 'total ascending'},
-            xaxis={'range': [0, max_dept * 1.8], 'autorange': False},
-            font=dict(size=13, family=font_family),
-            margin=dict(l=10, r=70, t=10, b=10),
-            height=420
-        )
-        fig_dept.update_traces(textposition='outside', textfont_size=13)
-        st.plotly_chart(fig_dept, use_container_width=True, config={'staticPlot': True})
-    else:
-        st.info("데이터가 없습니다.")
-
-# ==========================================
-# 8. 세부 데이터 표 (하단 기본 노출 영역)
-# ==========================================
-st.markdown("---")
-st.subheader(f"📋 세부 데이터 ({selected_status})")
-
-if len(filtered_df) > 0:
-    inv_col_real = next((c for c in filtered_df.columns if '투자 계획' in str(c)), '투자 계획\n(계약체결일)')
-    preferred_cols = ['순번', '투자구분', '진행상태', '신청부서', '의공담당', '의공담당자', '장비명', '승인금액', '계약금액', inv_col_real, '비고', '비고2']
-    display_columns = [c for c in preferred_cols if c in filtered_df.columns and c != '_년도_prefix']
-    
-    if seq_col_real and seq_col_real not in display_columns:
-        display_columns.insert(0, seq_col_real)
-
-    df_styled = filtered_df[display_columns].copy()
-    
-    if seq_col_real and seq_col_real in df_styled.columns:
-        df_styled[seq_col_real] = df_styled[seq_col_real].astype(str).str.replace('nan', '-')
-
-    if '승인금액' in df_styled.columns:
-        df_styled['승인금액'] = df_styled['승인금액'].apply(lambda x: "임차" if x == 0 else f"{x:,.0f}")
-        
-    if '계약금액' in df_styled.columns:
-        df_styled['계약금액'] = df_styled['계약금액'].apply(lambda x: "hidden" if pd.notnull(x) and x >= 1 else (f"{x:,.0f}" if pd.notnull(x) else "0"))
-        
-    if inv_col_real in df_styled.columns:
-        df_styled[inv_col_real] = df_styled[inv_col_real].astype(str).str.replace(' 00:00:00', '').replace('NaT', '-')
-
-    for text_col in ['투자구분', '의공담당', '의공담당자', '비고', '비고2']:
-        if text_col in df_styled.columns:
-            df_styled[text_col] = df_styled[text_col].apply(lambda x: "" if pd.isnull(x) or str(x).strip().lower() in ['nan', 'none', 'nat'] else str(x))
-
-    column_config = {}
-    for idx, col in enumerate(df_styled.columns, 1):
-        if idx in [1, 2, 3, 4, 5, 9]:
-            column_config[col] = st.column_config.TextColumn(col, width="auto", alignment="center")
-        elif idx in [7, 8]:
-            column_config[col] = st.column_config.TextColumn(col, width="auto", alignment="right")
-        else:
-            column_config[col] = st.column_config.TextColumn(col, width="auto")
-
-    st.dataframe(
-        df_styled,
-        use_container_width=True,
-        hide_index=True,
-        column_config=column_config
-    )
-
-else:
-    st.warning("선택하신 조건에 해당하는 데이터가 없습니다.")
+        if '계약금
