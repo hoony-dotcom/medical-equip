@@ -201,14 +201,17 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-# 3. 엑셀 데이터 불러오기 및 안전한 전처리
+# 3. 엑셀 데이터 불러오기 및 안전한 전처리 (순번 컬럼을 수식이 아닌 순수 텍스트 값으로 고정)
 @st.cache_data(ttl=60)
 def load_data(file_path):
     xl = pd.ExcelFile(file_path)
     sheet_name = 'Dashboard용' if 'Dashboard용' in xl.sheet_names else xl.sheet_names[0]
-    df = pd.read_excel(file_path, sheet_name=sheet_name, header=1)
+    
+    # 엑셀을 읽을 때 순번 컬럼을 포함하여 전체를 문자열 형태로 먼저 안전하게 가져옴
+    df = pd.read_excel(file_path, sheet_name=sheet_name, header=1, dtype=str)
     df.columns = [str(c).strip() for c in df.columns]
     
+    # 숫자형이어야 하는 컬럼들은 명시적으로 숫자로 변환 (승인금액, 계약금액)
     for col in ['승인금액', '계약금액']:
         if col in df.columns:
             df[col] = pd.to_numeric(df[col], errors='coerce').fillna(0) / 1000
@@ -225,16 +228,28 @@ def load_data(file_path):
 df = load_data(target_file)
 
 # ==========================================
-# 4. 순번 컬럼 기반 연도 추출 및 학년도 필터 구성 (오직 실제 데이터 기반만 추출)
+# 4. 순번 컬럼 기반 연도 추출 및 학년도 필터 구성 (순수 값 기준 추출)
 # ==========================================
 def extract_year_prefix(val):
     if pd.isna(val):
         return None
     s = str(val).strip()
+    if s.lower() in ['nan', 'none', 'nat', '']:
+        return None
+    
+    # 소수점(.0 등) 제거
     if '.' in s:
         s = s.split('.')[0]
+        
+    # 하이픈(-)이나 점(.)이 있는 경우 앞 두 자리 추출 (예: 25-1 -> 25)
+    match = re.match(r'^(\d{2})[-.]', s)
+    if match:
+        return match.group(1)
+        
+    # 단순히 2자리 이상의 숫자로 시작하는 경우 앞 두 자리 추출
     if len(s) >= 2 and s[:2].isdigit():
         return s[:2]
+        
     return None
 
 seq_col_real = None
@@ -278,7 +293,7 @@ st.sidebar.markdown(
 st.sidebar.header("🔍 대시보드 필터 설정")
 st.sidebar.markdown("---")
 
-# 오직 실제 데이터(순번 앞 두자리)에 존재하는 연도만 추출 (불필요한 하드코딩 범위 제거)
+# 실제 순번 값에서 추출된 유효한 연도만 정렬하여 필터 구성
 available_years = sorted([y for y in df['_년도_prefix'].unique() if y is not None]) if '_년도_prefix' in df.columns else []
 
 selected_years = []
