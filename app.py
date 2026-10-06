@@ -281,7 +281,9 @@ if available_years:
     
     for idx, year_val in enumerate(available_years):
         with year_cols[idx]:
-            is_checked = st.sidebar.checkbox(f"{year_val}학년도", value=True, key=f"chk_year_{year_val}")
+            # 순번 앞자리(예: '25')를 '2025학년도' 형태로 보기 좋게 변환
+            display_year_label = f"20{year_val}학년도" if len(year_val) == 2 and year_val.isdigit() else f"{year_val}학년도"
+            is_checked = st.sidebar.checkbox(display_year_label, value=True, key=f"chk_year_{year_val}")
             if is_checked:
                 selected_years.append(year_val)
                 
