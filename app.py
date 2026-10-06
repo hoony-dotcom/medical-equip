@@ -225,7 +225,7 @@ def load_data(file_path):
 df = load_data(target_file)
 
 # ==========================================
-# 4. 순번 컬럼 기반 연도 추출 및 학년도 필터 구성
+# 4. 순번 컬럼 기반 연도 추출 및 학년도 필터 구성 (오직 실제 데이터 기반만 추출)
 # ==========================================
 def extract_year_prefix(val):
     if pd.isna(val):
@@ -278,24 +278,26 @@ st.sidebar.markdown(
 st.sidebar.header("🔍 대시보드 필터 설정")
 st.sidebar.markdown("---")
 
-# 기본 연도 목록 (데이터에 있는 연도 프리픽스들 또는 14~26년 기본 제공)
+# 오직 실제 데이터(순번 앞 두자리)에 존재하는 연도만 추출 (불필요한 하드코딩 범위 제거)
 available_years = sorted([y for y in df['_년도_prefix'].unique() if y is not None]) if '_년도_prefix' in df.columns else []
-if not available_years:
-    available_years = [str(y) for y in range(14, 27)]
 
 selected_years = []
 st.sidebar.markdown("**📅 1차 필터: 학년도 선택**")
 
-for year_val in available_years:
-    display_year_label = f"20{year_val}학년도" if len(year_val) == 2 and year_val.isdigit() else f"{year_val}학년도"
-    is_checked = st.sidebar.checkbox(display_year_label, value=True, key=f"chk_year_{year_val}")
-    if is_checked:
-        selected_years.append(year_val)
-        
-if selected_years and '_년도_prefix' in df.columns:
-    filtered_df_by_year = df[df['_년도_prefix'].isin(selected_years)]
+if available_years:
+    for year_val in available_years:
+        display_year_label = f"20{year_val}학년도" if len(year_val) == 2 and year_val.isdigit() else f"{year_val}학년도"
+        is_checked = st.sidebar.checkbox(display_year_label, value=True, key=f"chk_year_{year_val}")
+        if is_checked:
+            selected_years.append(year_val)
+            
+    if selected_years and '_년도_prefix' in df.columns:
+        filtered_df_by_year = df[df['_년도_prefix'].isin(selected_years)]
+    else:
+        filtered_df_by_year = df.iloc[0:0]
 else:
     filtered_df_by_year = df
+    st.sidebar.warning("순번 데이터를 찾을 수 없습니다.")
 
 st.sidebar.markdown("")
 
