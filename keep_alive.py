@@ -4,12 +4,12 @@ from selenium.webdriver.chrome.options import Options
 
 # 깨우고 싶은 Streamlit 앱 URL들을 리스트에 모두 등록하세요
 APP_URLS = [
-    "https://inhazmed-investment.streamlit.app",
-    "https://inha-med-equipment.streamlit.app",
-    "https://hira-medical-device.streamlit.app",
-    "https://labelapp-akn2dgydwrwaxlnpjoesha.streamlit.app",
-    "https://inhazmed-search.streamlit.app",
-    "https://inhazmed-hdd-backup.streamlit.app",
+    "https://medical-equip-bsmygqdajzxkpmlw3rp5pe.streamlit.app/",
+    "https://mestatus-6ryv9m5cgo7qjprw7hry7s.streamlit.app/",
+    "https://2r4aeqjsgwhctdhlm8bw9r.streamlit.app/",
+    "https://me-search-ckfrctqz9kkdm6nuuzvk8c.streamlit.app/",
+    "https://hdd-backup-txvxa3jwl4xdsfdx2v2pqv.streamlit.app/",
+    "https://labelapp-akn2dgydwrwaxlnpjoesha.streamlit.app/",
 ]
 
 def wake_up_apps():
